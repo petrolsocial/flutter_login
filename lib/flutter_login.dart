@@ -301,9 +301,14 @@ class FlutterLogin extends StatefulWidget {
       this.savedPassword = '',
       this.initialAuthMode = AuthMode.login,
       this.children,
-      this.backgroundDecoration})
+      dynamic backgroundImage})
       : assert((logo is String?) || (logo is ImageProvider?)),
         logo = logo is String ? AssetImage(logo) : logo,
+        assert((backgroundImage is String?) ||
+            (backgroundImage is ImageProvider?)),
+        backgroundImage = backgroundImage is String
+            ? AssetImage(backgroundImage)
+            : backgroundImage,
         super(key: key);
 
   /// Called when the user hit the submit button when in sign up mode
@@ -419,8 +424,8 @@ class FlutterLogin extends StatefulWidget {
   /// Supply custom widgets to the auth stack such as a custom logo widget
   final List<Widget>? children;
 
-  /// Box decoration that is applied at the bottom of the stack as a background.
-  final BoxDecoration? backgroundDecoration;
+  /// Image that is applied at the bottom of the stack as a background.
+  final ImageProvider? backgroundImage;
 
   static String? defaultEmailValidator(value) {
     if (value!.isEmpty || !Regex.email.hasMatch(value)) {
@@ -766,70 +771,70 @@ class _FlutterLoginState extends State<FlutterLogin>
         ),
       ],
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        //backgroundColor: Colors.transparent,
         body: SafeArea(
-          child: Container(
-            alignment: Alignment.center,
-            decoration: widget.backgroundDecoration ??
-                const BoxDecoration(color: Colors.transparent),
-            child: Stack(
-              children: <Widget>[
-                GradientBox(
-                  colors: [
-                    loginTheme.pageColorLight ?? theme.primaryColor,
-                    loginTheme.pageColorDark ?? theme.primaryColorDark,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                SingleChildScrollView(
-                  child: Theme(
-                    data: theme,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: <Widget>[
-                        Positioned(
-                          child: AuthCard(
-                            key: authCardKey,
-                            userType: widget.userType,
-                            padding: EdgeInsets.only(top: cardTopPosition),
-                            loadingController: _loadingController,
-                            userValidator: userValidator,
-                            passwordValidator: passwordValidator,
-                            onSubmit: _reverseHeaderAnimation,
-                            onSubmitCompleted:
-                                widget.onSubmitAnimationCompleted,
-                            hideSignUpButton: widget.onSignup == null,
-                            hideForgotPasswordButton:
-                                widget.hideForgotPasswordButton,
-                            loginAfterSignUp: widget.loginAfterSignUp,
-                            hideProvidersTitle: widget.hideProvidersTitle,
-                            additionalSignUpFields:
-                                widget.additionalSignupFields,
-                            disableCustomPageTransformer:
-                                widget.disableCustomPageTransformer,
-                            loginTheme: widget.theme,
-                            navigateBackAfterRecovery:
-                                widget.navigateBackAfterRecovery,
+          child: Stack(
+            children: <Widget>[
+              GradientBox(
+                colors: [
+                  loginTheme.pageColorLight ?? theme.primaryColor,
+                  loginTheme.pageColorDark ?? theme.primaryColorDark,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              SingleChildScrollView(
+                child: Theme(
+                  data: theme,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: <Widget>[
+                      if (widget.backgroundImage != null)
+                        Container(
+                          alignment: Alignment.center,
+                          child: Image(
+                            image: widget.backgroundImage!,
                           ),
                         ),
-                        Positioned(
-                          top: cardTopPosition - headerHeight - headerMargin,
-                          child: _buildHeader(headerHeight, loginTheme),
+                      Positioned(
+                        child: AuthCard(
+                          key: authCardKey,
+                          userType: widget.userType,
+                          padding: EdgeInsets.only(top: cardTopPosition),
+                          loadingController: _loadingController,
+                          userValidator: userValidator,
+                          passwordValidator: passwordValidator,
+                          onSubmit: _reverseHeaderAnimation,
+                          onSubmitCompleted: widget.onSubmitAnimationCompleted,
+                          hideSignUpButton: widget.onSignup == null,
+                          hideForgotPasswordButton:
+                              widget.hideForgotPasswordButton,
+                          loginAfterSignUp: widget.loginAfterSignUp,
+                          hideProvidersTitle: widget.hideProvidersTitle,
+                          additionalSignUpFields: widget.additionalSignupFields,
+                          disableCustomPageTransformer:
+                              widget.disableCustomPageTransformer,
+                          loginTheme: widget.theme,
+                          navigateBackAfterRecovery:
+                              widget.navigateBackAfterRecovery,
                         ),
-                        Positioned.fill(
-                            child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: footerWidget)),
-                        ...?widget.children,
-                      ],
-                    ),
+                      ),
+                      Positioned(
+                        top: cardTopPosition - headerHeight - headerMargin,
+                        child: _buildHeader(headerHeight, loginTheme),
+                      ),
+                      Positioned.fill(
+                          child: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: footerWidget)),
+                      ...?widget.children,
+                    ],
                   ),
                 ),
-                if (!kReleaseMode && widget.showDebugButtons)
-                  _buildDebugAnimationButtons(),
-              ],
-            ),
+              ),
+              if (!kReleaseMode && widget.showDebugButtons)
+                _buildDebugAnimationButtons(),
+            ],
           ),
         ),
       ),
