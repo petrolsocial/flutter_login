@@ -300,7 +300,8 @@ class FlutterLogin extends StatefulWidget {
       this.savedEmail = '',
       this.savedPassword = '',
       this.initialAuthMode = AuthMode.login,
-      this.children})
+      this.children,
+      this.backgroundDecoration})
       : assert((logo is String?) || (logo is ImageProvider?)),
         logo = logo is String ? AssetImage(logo) : logo,
         super(key: key);
@@ -417,6 +418,9 @@ class FlutterLogin extends StatefulWidget {
 
   /// Supply custom widgets to the auth stack such as a custom logo widget
   final List<Widget>? children;
+
+  /// Box decoration that is applied at the bottom of the stack as a background.
+  final BoxDecoration? backgroundDecoration;
 
   static String? defaultEmailValidator(value) {
     if (value!.isEmpty || !Regex.email.hasMatch(value)) {
@@ -779,6 +783,10 @@ class _FlutterLoginState extends State<FlutterLogin>
                 child: Stack(
                   alignment: Alignment.center,
                   children: <Widget>[
+                    if (widget.backgroundDecoration != null)
+                      Container(
+                        decoration: widget.backgroundDecoration,
+                      ),
                     Positioned(
                       child: AuthCard(
                         key: authCardKey,
