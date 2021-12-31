@@ -438,6 +438,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
               fontSize: fontSize,
               fontWeight: theme.textTheme.bodyText1!.fontWeight,
               letterSpacing: theme.textTheme.bodyText1!.letterSpacing,
+              color: theme.primaryColor,
             ),
           ),
           onPressed: () => _submit(true),
