@@ -425,12 +425,21 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
 
   Widget _buildAnonAuthButton(
       ThemeData theme, LoginMessages messages, Auth auth) {
+    final theme = Theme.of(context);
+    final fontSize = theme.textTheme.bodyText1!.fontSize!;
     return ScaleTransition(
       scale: _buttonScaleAnimation,
       child: Align(
         alignment: Alignment.centerRight,
         child: TextButton(
-          child: Text(messages.anonAuth),
+          child: Text(
+            messages.anonAuth,
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: theme.textTheme.bodyText1!.fontWeight,
+              letterSpacing: theme.textTheme.bodyText1!.letterSpacing,
+            ),
+          ),
           onPressed: () => _submit(true),
         ),
       ),
