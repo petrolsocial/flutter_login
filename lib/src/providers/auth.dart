@@ -63,6 +63,7 @@ class Auth with ChangeNotifier {
   final List<TermOfService> termsOfService;
 
   AuthType _authType = AuthType.userPassword;
+  bool isAnonymous = false;
 
   /// Used to decide if the login/signup comes from a provider or normal login
   AuthType get authType => _authType;

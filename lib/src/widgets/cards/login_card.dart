@@ -16,6 +16,7 @@ class _LoginCard extends StatefulWidget {
     this.onSubmitCompleted,
     this.hideForgotPasswordButton = false,
     this.hideSignUpButton = false,
+    this.enableAnonAuth = false,
     this.loginAfterSignUp = true,
     this.hideProvidersTitle = false,
   }) : super(key: key);
@@ -30,6 +31,7 @@ class _LoginCard extends StatefulWidget {
   final Function? onSubmitCompleted;
   final bool hideForgotPasswordButton;
   final bool hideSignUpButton;
+  final bool enableAnonAuth;
   final bool loginAfterSignUp;
   final bool hideProvidersTitle;
   final LoginUserType userType;
@@ -148,7 +150,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     }
   }
 
-  Future<bool> _submit() async {
+  Future<bool> _submit(bool isAnonymous) async {
     // a hack to force unfocus the soft keyboard. If not, after change-route
     // animation completes, it will trigger rebuilding this widget and show all
     // textfields and buttons again before going to new route
@@ -156,7 +158,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
 
     final messages = Provider.of<LoginMessages>(context, listen: false);
 
-    if (!_formKey.currentState!.validate()) {
+    if (!isAnonymous && !_formKey.currentState!.validate()) {
       return false;
     }
 
@@ -167,17 +169,23 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     String? error;
 
     auth.authType = AuthType.userPassword;
+    auth.isAnonymous = isAnonymous;
+    if (auth.isAnonymous) {
+      auth.mode = AuthMode.signup;
+    }
 
-    if (auth.isLogin) {
+    if (!isAnonymous && auth.isLogin) {
       error = await auth.onLogin?.call(LoginData(
         name: auth.email,
         password: auth.password,
+        isAnonymous: isAnonymous,
       ));
     } else {
       if (!widget.requireAdditionalSignUpFields) {
         error = await auth.onSignup!(SignupData.fromSignupForm(
             name: auth.email,
             password: auth.password,
+            isAnonymous: auth.isAnonymous,
             termsOfService: auth.getTermsOfServiceResults()));
       }
     }
@@ -317,7 +325,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       focusNode: _passwordFocusNode,
       onFieldSubmitted: (value) {
         if (auth.isLogin) {
-          _submit();
+          _submit(false);
         } else {
           // SignUp
           FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
@@ -341,7 +349,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       controller: _confirmPassController,
       textInputAction: TextInputAction.done,
       focusNode: _confirmPasswordFocusNode,
-      onFieldSubmitted: (value) => _submit(),
+      onFieldSubmitted: (value) => _submit(false),
       validator: auth.isSignup
           ? (value) {
               if (value != _passController.text) {
@@ -384,7 +392,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       child: AnimatedButton(
         controller: _submitController,
         text: auth.isLogin ? messages.loginButton : messages.signupButton,
-        onPressed: () => _submit(),
+        onPressed: () => _submit(false),
       ),
     );
   }
@@ -410,6 +418,20 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
         child: AnimatedText(
           text: auth.isSignup ? messages.loginButton : messages.signupButton,
           textRotation: AnimatedTextRotation.down,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnonAuthButton(
+      ThemeData theme, LoginMessages messages, Auth auth) {
+    return ScaleTransition(
+      scale: _buttonScaleAnimation,
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: TextButton(
+          child: Text(messages.anonAuth),
+          onPressed: () => _submit(true),
         ),
       ),
     );
@@ -639,6 +661,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
                     ? _buildProvidersTitleFirst(messages)
                     : Container(),
                 _buildProvidersLogInButton(theme, messages, auth, loginTheme),
+                _buildAnonAuthButton(theme, messages, auth),
               ],
             ),
           ),

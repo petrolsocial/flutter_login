@@ -3,8 +3,10 @@ import 'package:quiver/core.dart';
 class LoginData {
   final String name;
   final String password;
+  bool isAnonymous;
 
-  LoginData({required this.name, required this.password});
+  LoginData(
+      {required this.name, required this.password, required this.isAnonymous});
 
   @override
   String toString() {

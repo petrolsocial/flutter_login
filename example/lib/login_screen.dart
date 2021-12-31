@@ -18,10 +18,10 @@ class LoginScreen extends StatelessWidget {
 
   Future<String?> _loginUser(LoginData data) {
     return Future.delayed(loginTime).then((_) {
-      if (!mockUsers.containsKey(data.name)) {
+      if (!data.isAnonymous && !mockUsers.containsKey(data.name)) {
         return 'User not exists';
       }
-      if (mockUsers[data.name] != data.password) {
+      if (!data.isAnonymous && mockUsers[data.name] != data.password) {
         return 'Password does not match';
       }
       return null;
@@ -60,6 +60,7 @@ class LoginScreen extends StatelessWidget {
       onConfirmRecover: _signupConfirm,
       onConfirmSignup: _signupConfirm,
       loginAfterSignUp: false,
+      enableAnonAuth: true,
       loginProviders: [
         LoginProvider(
           button: Buttons.LinkedIn,

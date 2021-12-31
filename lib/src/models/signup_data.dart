@@ -6,10 +6,12 @@ class SignupData {
   final String? password;
   final List<TermOfServiceResult> termsOfService;
   final Map<String, String>? additionalSignupData;
+  bool isAnonymous;
 
   SignupData.fromSignupForm(
       {required this.name,
       required this.password,
+      required this.isAnonymous,
       this.additionalSignupData,
       this.termsOfService = const []});
 
@@ -17,7 +19,8 @@ class SignupData {
     required this.additionalSignupData,
     this.termsOfService = const [],
   })  : name = null,
-        password = null;
+        password = null,
+        isAnonymous = false;
 
   @override
   bool operator ==(Object other) {

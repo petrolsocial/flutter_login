@@ -61,6 +61,7 @@ class _ConfirmSignupCardState extends State<_ConfirmSignupCard>
         LoginData(
           name: auth.email,
           password: auth.password,
+          isAnonymous: auth.isAnonymous,
         ));
 
     if (error != null) {
@@ -96,6 +97,7 @@ class _ConfirmSignupCardState extends State<_ConfirmSignupCard>
     final error = await auth.onResendCode!(SignupData.fromSignupForm(
         name: auth.email,
         password: auth.password,
+        isAnonymous: auth.isAnonymous,
         termsOfService: auth.getTermsOfServiceResults()));
 
     if (error != null) {

@@ -292,6 +292,7 @@ class FlutterLogin extends StatefulWidget {
       this.hideProvidersTitle = false,
       this.additionalSignupFields,
       this.disableCustomPageTransformer = false,
+      this.enableAnonAuth = false,
       this.navigateBackAfterRecovery = false,
       this.termsOfService = const <TermOfService>[],
       this.onConfirmRecover,
@@ -390,6 +391,10 @@ class FlutterLogin extends StatefulWidget {
   /// Disable the page transformation between switching authentication modes.
   /// Fixes #97 if disabled. https://github.com/NearHuscarl/flutter_login/issues/97
   final bool disableCustomPageTransformer;
+
+  /// Enable anonymous auth. Skips the usual login flow to call
+  /// the underlying authenticator's anon auth flow.
+  final bool enableAnonAuth;
 
   /// Navigate back to the login screen after recovery of password.
   final bool navigateBackAfterRecovery;
@@ -809,6 +814,7 @@ class _FlutterLoginState extends State<FlutterLogin>
                           hideSignUpButton: widget.onSignup == null,
                           hideForgotPasswordButton:
                               widget.hideForgotPasswordButton,
+                          enableAnonAuth: widget.enableAnonAuth,
                           loginAfterSignUp: widget.loginAfterSignUp,
                           hideProvidersTitle: widget.hideProvidersTitle,
                           additionalSignUpFields: widget.additionalSignupFields,
