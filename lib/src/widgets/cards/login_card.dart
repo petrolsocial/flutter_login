@@ -671,7 +671,8 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
                     ? _buildProvidersTitleFirst(messages)
                     : Container(),
                 _buildProvidersLogInButton(theme, messages, auth, loginTheme),
-                _buildAnonAuthButton(theme, messages, auth),
+                if (widget.enableAnonAuth)
+                  _buildAnonAuthButton(theme, messages, auth),
               ],
             ),
           ),
