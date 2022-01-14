@@ -795,10 +795,10 @@ class _FlutterLoginState extends State<FlutterLogin>
                     alignment: Alignment.center,
                     children: <Widget>[
                       if (widget.backgroundImage != null)
-                        Container(
-                          alignment: Alignment.center,
+                        Positioned.fill(
                           child: Image(
                             image: widget.backgroundImage!,
+                            fit: BoxFit.cover,
                           ),
                         ),
                       Positioned(
