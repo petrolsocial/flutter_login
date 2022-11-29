@@ -261,12 +261,15 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     final messages = Provider.of<LoginMessages>(context, listen: false);
 
     if (!DartHelper.isNullOrEmpty(error)) {
-      showErrorToast(context, messages.flushbarTitleError, error!);
-      Future.delayed(const Duration(milliseconds: 271), () {
-        if (mounted) {
-          setState(() => _showShadow = true);
-        }
-      });
+      if (error != 'skip') {
+        showErrorToast(context, messages.flushbarTitleError, error!);
+        Future.delayed(const Duration(milliseconds: 271), () {
+          if (mounted) {
+            setState(() => _showShadow = true);
+          }
+        });
+      }
+
       return false;
     }
 
