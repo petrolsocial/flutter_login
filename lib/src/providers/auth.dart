@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_login/src/models/phone_login_data.dart';
 
 import '../../flutter_login.dart';
 
@@ -9,6 +10,10 @@ enum AuthType { provider, userPassword }
 /// The callback triggered after login
 /// The result is an error message, callback successes if message is null
 typedef LoginCallback = Future<String?>? Function(LoginData);
+
+/// The callback triggered after phone login
+/// The result is an error message, callback successes if message is null
+typedef PhoneLoginCallback = Future<String?>? Function(PhoneLoginData);
 
 /// The callback triggered after signup
 /// The result is an error message, callback successes if message is null
@@ -39,6 +44,7 @@ class Auth with ChangeNotifier {
       {this.loginProviders = const [],
       this.onLogin,
       this.onSignup,
+      this.onPhoneLogin,
       this.onRecoverPassword,
       this.onConfirmRecover,
       this.onConfirmSignup,
@@ -55,6 +61,7 @@ class Auth with ChangeNotifier {
 
   final LoginCallback? onLogin;
   final SignupCallback? onSignup;
+  final PhoneLoginCallback? onPhoneLogin;
   final RecoverCallback? onRecoverPassword;
   final List<LoginProvider> loginProviders;
   final ConfirmRecoverCallback? onConfirmRecover;
@@ -107,6 +114,13 @@ class Auth with ChangeNotifier {
   String get password => _password;
   set password(String password) {
     _password = password;
+    notifyListeners();
+  }
+
+  String _phoneNumber = '';
+  String get phoneNumber => _phoneNumber;
+  set phoneNumber(String phoneNumber) {
+    _phoneNumber = phoneNumber;
     notifyListeners();
   }
 

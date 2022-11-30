@@ -1,7 +1,7 @@
 part of auth_card_builder;
 
-class _LoginCard extends StatefulWidget {
-  const _LoginCard({
+class EmailCard extends StatefulWidget {
+  const EmailCard({
     Key? key,
     required this.loadingController,
     required this.userValidator,
@@ -12,11 +12,11 @@ class _LoginCard extends StatefulWidget {
     required this.requireAdditionalSignUpFields,
     required this.onSwitchConfirmSignup,
     required this.requireSignUpConfirmation,
+    required this.onBack,
     this.onSwitchAuth,
     this.onSubmitCompleted,
     this.hideForgotPasswordButton = false,
     this.hideSignUpButton = false,
-    this.enableAnonAuth = false,
     this.loginAfterSignUp = true,
     this.hideProvidersTitle = false,
   }) : super(key: key);
@@ -29,9 +29,9 @@ class _LoginCard extends StatefulWidget {
   final Function onSwitchConfirmSignup;
   final Function? onSwitchAuth;
   final Function? onSubmitCompleted;
+  final Function onBack;
   final bool hideForgotPasswordButton;
   final bool hideSignUpButton;
-  final bool enableAnonAuth;
   final bool loginAfterSignUp;
   final bool hideProvidersTitle;
   final LoginUserType userType;
@@ -39,10 +39,10 @@ class _LoginCard extends StatefulWidget {
   final bool requireSignUpConfirmation;
 
   @override
-  _LoginCardState createState() => _LoginCardState();
+  _EmailCardState createState() => _EmailCardState();
 }
 
-class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
+class _EmailCardState extends State<EmailCard> with TickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey();
 
   final _passwordFocusNode = FocusNode();
@@ -426,176 +426,6 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildAnonAuthButton(
-      ThemeData theme, LoginMessages messages, Auth auth) {
-    final theme = Theme.of(context);
-    final fontSize = theme.textTheme.bodyText1!.fontSize!;
-    return ScaleTransition(
-      scale: _buttonScaleAnimation,
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: TextButton(
-          child: Text(
-            messages.anonAuth,
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: theme.textTheme.bodyText1!.fontWeight,
-              letterSpacing: theme.textTheme.bodyText1!.letterSpacing,
-              color: theme.primaryColor,
-            ),
-          ),
-          onPressed: () => _submit(true),
-        ),
-      ),
-    );
-  }
-
-  // Widget _buildProvidersLogInButton(ThemeData theme, LoginMessages messages,
-  //     Auth auth, LoginTheme loginTheme) {
-  //   return Row(
-  //       mainAxisAlignment: MainAxisAlignment.center,
-  //       children: auth.loginProviders.map((loginProvider) {
-  //         var index = auth.loginProviders.indexOf(loginProvider);
-  //         return Padding(
-  //           padding: loginTheme.providerButtonPadding ??
-  //               const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
-  //           child: ScaleTransition(
-  //             scale: _buttonScaleAnimation,
-  //             child: Column(
-  //               children: [
-  //                 AnimatedIconButton(
-  //                   icon: loginProvider.icon,
-  //                   controller: _providerControllerList[index],
-  //                   tooltip: '',
-  //                   onPressed: () => _loginProviderSubmit(
-  //                     animationController: _providerControllerList[index],
-  //                     loginProvider: loginProvider,
-  //                   ),
-  //                 ),
-  //                 Text(loginProvider.label),
-  //               ],
-  //             ),
-  //           ),
-  //         );
-  //       }).toList());
-  // }
-
-  Widget _buildProvidersLogInButton(ThemeData theme, LoginMessages messages,
-      Auth auth, LoginTheme loginTheme) {
-    var buttonProvidersList = <LoginProvider>[];
-    var iconProvidersList = <LoginProvider>[];
-    for (var loginProvider in auth.loginProviders) {
-      if (loginProvider.button != null) {
-        buttonProvidersList.add(LoginProvider(
-          icon: loginProvider.icon,
-          label: loginProvider.label,
-          button: loginProvider.button,
-          callback: loginProvider.callback,
-        ));
-      } else if (loginProvider.icon != null) {
-        iconProvidersList.add(LoginProvider(
-          icon: loginProvider.icon,
-          label: loginProvider.label,
-          button: loginProvider.button,
-          callback: loginProvider.callback,
-        ));
-      }
-    }
-    if (buttonProvidersList.isNotEmpty) {
-      return Column(
-        children: [
-          _buildButtonColumn(theme, messages, buttonProvidersList, loginTheme),
-          iconProvidersList.isNotEmpty
-              ? _buildProvidersTitleSecond(messages)
-              : Container(),
-          _buildIconRow(theme, messages, iconProvidersList, loginTheme),
-        ],
-      );
-    } else if (iconProvidersList.isNotEmpty) {
-      return _buildIconRow(theme, messages, iconProvidersList, loginTheme);
-    }
-    return Container();
-  }
-
-  Widget _buildButtonColumn(ThemeData theme, LoginMessages messages,
-      List<LoginProvider> buttonProvidersList, LoginTheme loginTheme) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: buttonProvidersList.map((loginProvider) {
-        return Padding(
-          padding: loginTheme.providerButtonPadding ??
-              const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
-          child: ScaleTransition(
-            scale: _buttonScaleAnimation,
-            child: SignInButton(
-              loginProvider.button!,
-              onPressed: () => _loginProviderSubmit(
-                loginProvider: loginProvider,
-              ),
-              text: loginProvider.label,
-            ),
-            // child: loginProvider.button,
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildIconRow(ThemeData theme, LoginMessages messages,
-      List<LoginProvider> iconProvidersList, LoginTheme loginTheme) {
-    return Wrap(
-      children: iconProvidersList.map((loginProvider) {
-        var index = iconProvidersList.indexOf(loginProvider);
-        return Padding(
-          padding: loginTheme.providerButtonPadding ??
-              const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
-          child: ScaleTransition(
-              scale: _buttonScaleAnimation,
-              child: Column(
-                children: [
-                  AnimatedIconButton(
-                    icon: loginProvider.icon!,
-                    controller: _providerControllerList[index],
-                    tooltip: loginProvider.label,
-                    onPressed: () => _loginProviderSubmit(
-                      control: _providerControllerList[index],
-                      loginProvider: loginProvider,
-                    ),
-                  ),
-                  Text(loginProvider.label)
-                ],
-              )),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildProvidersTitleFirst(LoginMessages messages) {
-    return ScaleTransition(
-        scale: _buttonScaleAnimation,
-        child: Row(children: <Widget>[
-          const Expanded(child: Divider()),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(messages.providersTitleFirst),
-          ),
-          const Expanded(child: Divider()),
-        ]));
-  }
-
-  Widget _buildProvidersTitleSecond(LoginMessages messages) {
-    return ScaleTransition(
-        scale: _buttonScaleAnimation,
-        child: Row(children: <Widget>[
-          const Expanded(child: Divider()),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(messages.providersTitleSecond),
-          ),
-          const Expanded(child: Divider()),
-        ]));
-  }
-
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<Auth>(context, listen: true);
@@ -620,66 +450,6 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Container(
-                  padding: Paddings.fromRBL(cardPadding),
-                  width: cardWidth,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: loginTheme.providerButtonPadding ??
-                            const EdgeInsets.symmetric(
-                                horizontal: 6.0, vertical: 8.0),
-                        child: ScaleTransition(
-                          scale: _buttonScaleAnimation,
-                          child: MaterialButton(
-                            key: const ValueKey('Phone'),
-                            height: 36,
-                            elevation: 2.0,
-                            padding: const EdgeInsets.all(0),
-                            color: const Color(0xFFFFFFFF),
-                            onPressed: () {},
-                            splashColor: Colors.white30,
-                            highlightColor: Colors.white30,
-                            child: Container(
-                              constraints: const BoxConstraints(
-                                maxWidth: 220,
-                              ),
-                              child: Center(
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: const <Widget>[
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 13,
-                                      ),
-                                      child: Icon(
-                                        Icons.phone,
-                                        size: 20,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Sign in with Phone',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 14,
-                                        backgroundColor:
-                                            Color.fromRGBO(0, 0, 0, 0),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            shape: ButtonTheme.of(context).shape,
-                          ),
-                          // child: loginProvider.button,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 _buildUserField(textFieldWidth, messages, auth),
                 const SizedBox(height: 20),
                 _buildPasswordField(textFieldWidth, messages, auth),
@@ -710,15 +480,6 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
             width: cardWidth,
             child: Column(
               children: <Widget>[
-                if (auth.isSignup && auth.termsOfService.isNotEmpty)
-                  ...auth.termsOfService
-                      .map((e) => ScaleTransition(
-                            scale: _buttonScaleAnimation,
-                            child: TermCheckbox(
-                              termOfService: e,
-                            ),
-                          ))
-                      .toList(),
                 !widget.hideForgotPasswordButton
                     ? _buildForgotPassword(theme, messages)
                     : SizedBox.fromSize(
@@ -730,12 +491,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
                     : SizedBox.fromSize(
                         size: const Size.fromHeight(10),
                       ),
-                auth.loginProviders.isNotEmpty && !widget.hideProvidersTitle
-                    ? _buildProvidersTitleFirst(messages)
-                    : Container(),
-                _buildProvidersLogInButton(theme, messages, auth, loginTheme),
-                if (widget.enableAnonAuth)
-                  _buildAnonAuthButton(theme, messages, auth),
+                _buildBackButton(theme, messages, loginTheme),
               ],
             ),
           ),
@@ -748,6 +504,26 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
         elevation: _showShadow ? theme.cardTheme.elevation : 0,
         child: authForm,
       ),
+    );
+  }
+
+  Widget _buildBackButton(
+      ThemeData theme, LoginMessages messages, LoginTheme? loginTheme) {
+    final calculatedTextColor =
+        (theme.cardTheme.color!.computeLuminance() < 0.5)
+            ? Colors.white
+            : theme.primaryColor;
+    return MaterialButton(
+      onPressed: !_isSubmitting
+          ? () {
+              _formKey.currentState!.save();
+              widget.onBack();
+            }
+          : null,
+      padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 4),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      textColor: loginTheme?.switchAuthTextColor ?? calculatedTextColor,
+      child: Text(messages.goBackButton),
     );
   }
 }

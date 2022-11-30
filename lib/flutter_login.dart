@@ -48,6 +48,11 @@ class LoginProvider {
   /// but [button] will take preference over [icon]
   final IconData? icon;
 
+  /// Phone login
+  ///
+  /// NOTE: Both [button] and [icon] will be ignored when this is true.
+  final bool? phoneLogin;
+
   /// The label shown under the provider
   final String label;
 
@@ -72,6 +77,7 @@ class LoginProvider {
     this.callback,
     this.label = '',
     this.providerNeedsSignUpCallback,
+    this.phoneLogin,
     // this.animated = true
   }) : assert(button != null || icon != null);
 }
@@ -270,6 +276,7 @@ class FlutterLogin extends StatefulWidget {
   FlutterLogin(
       {Key? key,
       this.onSignup,
+      this.onPhoneLogin,
       required this.onLogin,
       required this.onRecoverPassword,
       this.title,
@@ -316,6 +323,9 @@ class FlutterLogin extends StatefulWidget {
   ///
   /// Can be null to disable signup.
   final SignupCallback? onSignup;
+
+  /// Called when the user hit the submit button when in login mode
+  final PhoneLoginCallback? onPhoneLogin;
 
   /// Called when the user hit the submit button when in login mode
   final LoginCallback onLogin;
@@ -762,6 +772,7 @@ class _FlutterLoginState extends State<FlutterLogin>
           create: (context) => Auth(
             onLogin: widget.onLogin,
             onSignup: widget.onSignup,
+            onPhoneLogin: widget.onPhoneLogin,
             onRecoverPassword: widget.onRecoverPassword,
             loginProviders: widget.loginProviders,
             email: widget.savedEmail,

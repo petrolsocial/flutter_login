@@ -16,7 +16,9 @@ class LoginData {
   @override
   bool operator ==(Object other) {
     if (other is LoginData) {
-      return name == other.name && password == other.password;
+      return name == other.name &&
+          password == other.password &&
+          isAnonymous == other.isAnonymous;
     }
     return false;
   }

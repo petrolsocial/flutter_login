@@ -9,12 +9,17 @@ import 'package:flutter_login/flutter_login.dart';
 import 'package:flutter_login/src/constants.dart';
 import 'package:flutter_login/src/dart_helper.dart';
 import 'package:flutter_login/src/matrix.dart';
+import 'package:flutter_login/src/models/phone_login_data.dart';
 import 'package:flutter_login/src/paddings.dart';
 import 'package:flutter_login/src/utils/text_field_utils.dart';
 import 'package:flutter_login/src/widget_helper.dart';
+import 'package:flutter_login/src/widgets/cards/pin_input_field.dart';
 import 'package:flutter_login/src/widgets/term_of_service_checkbox.dart';
+import 'package:flutter_signin_button/button_list.dart';
 import 'package:flutter_signin_button/button_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 
 import '../../../flutter_login.dart';
@@ -27,6 +32,9 @@ import '../expandable_container.dart';
 import '../fade_in.dart';
 
 part 'additional_signup_card.dart';
+part 'landing_card.dart';
+part 'email_card.dart';
+part 'phone_card.dart';
 part 'login_card.dart';
 part 'recover_card.dart';
 part 'recover_confirm_card.dart';
@@ -82,11 +90,14 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
   final GlobalKey _confirmRecoverCardKey = GlobalKey();
   final GlobalKey _confirmSignUpCardKey = GlobalKey();
 
-  static const int _loginPageIndex = 0;
-  static const int _recoveryIndex = 1;
-  static const int _additionalSignUpIndex = 2;
-  static const int _confirmSignup = 3;
-  static const int _confirmRecover = 4;
+  static const int _landingPageIndex = 0;
+  static const int _emailPageIndex = 1;
+  static const int _loginPageIndex = 2;
+  static const int _recoveryIndex = 3;
+  static const int _phoneIndex = 4;
+  static const int _additionalSignUpIndex = 5;
+  static const int _confirmSignup = 6;
+  static const int _confirmRecover = 7;
 
   int _pageIndex = _loginPageIndex;
 
@@ -315,6 +326,29 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
     var formController = _formLoadingController;
     // if (!_isLoadingFirstTime) formController = _formLoadingController..value = 1.0;
     switch (index) {
+      case _landingPageIndex:
+        return _buildLoadingAnimator(
+          theme: Theme.of(context),
+          child: LandingCard(
+            loadingController: formController,
+            onSignInWithEmail: () => _changeCard(_emailPageIndex),
+            onSignInWithPhone: () => _changeCard(_phoneIndex),
+          ),
+        );
+      case _emailPageIndex:
+        return EmailCard(
+          loadingController: formController,
+          userValidator: widget.userValidator,
+          passwordValidator: widget.passwordValidator,
+          onSwitchRecoveryPassword: () => _changeCard(_recoveryIndex),
+          onSwitchSignUpAdditionalData: () =>
+              _changeCard(_additionalSignUpIndex),
+          userType: widget.userType,
+          requireAdditionalSignUpFields: widget.additionalSignUpFields != null,
+          onSwitchConfirmSignup: () => _changeCard(_confirmSignup),
+          requireSignUpConfirmation: auth.onConfirmSignup != null,
+          onBack: () => _changeCard(_landingPageIndex),
+        );
       case _loginPageIndex:
         return _buildLoadingAnimator(
           theme: Theme.of(context),
@@ -358,7 +392,16 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
                 _changeCard(_loginPageIndex);
               }
             });
-
+      case _phoneIndex:
+        return PhoneCard(
+          loadingController: formController,
+          requireAdditionalSignUpFields: widget.additionalSignUpFields != null,
+          onSwitchConfirmSignup: () => _changeCard(_confirmSignup),
+          requireSignUpConfirmation: auth.onConfirmSignup != null,
+          onBack: () => _changeCard(_landingPageIndex),
+          onSwitchSignUpAdditionalData: () =>
+              _changeCard(_additionalSignUpIndex),
+        );
       case _additionalSignUpIndex:
         if (widget.additionalSignUpFields == null) {
           return const SizedBox.shrink();
