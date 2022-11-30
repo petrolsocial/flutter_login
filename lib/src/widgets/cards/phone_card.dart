@@ -119,7 +119,6 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
     // animation completes, it will trigger rebuilding this widget and show all
     // textfields and buttons again before going to new route
     FocusScope.of(context).requestFocus(FocusNode());
-    //_otpController.forward();
 
     final messages = Provider.of<LoginMessages>(context, listen: false);
 
@@ -168,16 +167,14 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
       return false;
     }
 
-    widget.onSubmitCompleted?.call();
+    _otpController.forward();
+    //widget.onSubmitCompleted?.call();
 
     return true;
   }
 
   Widget _buildPhoneNumberField(Auth auth) {
     return IntlPhoneField(
-      onSubmitted: (p0) {
-        print(p0);
-      },
       autovalidateMode: AutovalidateMode.disabled,
       autofocus: true,
       invalidNumberMessage: 'Invalid Phone Number!',
@@ -271,7 +268,7 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildOTPField() {
+  Widget _buildOTPField(Auth auth, LoginMessages messages) {
     return Column(
       children: [
         const Text('OTP'),
@@ -282,18 +279,26 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
             if (hasFocus) await _scrollToBottomOnKeyboardOpen();
           },
           onSubmit: (enteredOtp) async {
-            print('onsubmit');
-            // final verified =
-            //     await controller
-            //         .verifyOtp(
-            //             enteredOtp);
-            // if (verified) {
-            //   // number verify success
-            //   // will call onLoginSuccess handler
-            // } else {
-            //   // phone verification failed
-            //   // will call onLoginFailed or onError callbacks with the error
-            // }
+            var error = await auth.onPhoneLoginOtp?.call(
+              PhoneLoginData(
+                phoneNumber: auth.phoneNumber,
+                otp: enteredOtp,
+              ),
+            );
+
+            await _submitController.reverse();
+
+            if (!DartHelper.isNullOrEmpty(error)) {
+              showErrorToast(context, messages.flushbarTitleError, error!);
+              Future.delayed(const Duration(milliseconds: 271), () {
+                if (mounted) {
+                  setState(() => _showShadow = true);
+                }
+              });
+              setState(() => _isSubmitting = false);
+            }
+
+            widget.onSubmitCompleted?.call();
           },
         ),
       ],

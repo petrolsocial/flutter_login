@@ -278,6 +278,7 @@ class FlutterLogin extends StatefulWidget {
       {Key? key,
       this.onSignup,
       this.onPhoneLogin,
+      this.onPhoneLoginOtp,
       required this.onLogin,
       required this.onRecoverPassword,
       this.title,
@@ -325,8 +326,11 @@ class FlutterLogin extends StatefulWidget {
   /// Can be null to disable signup.
   final SignupCallback? onSignup;
 
-  /// Called when the user hit the submit button when in login mode
+  /// Called when the user hit the submit button when in phone login mode
   final PhoneLoginCallback? onPhoneLogin;
+
+  /// Called when the user hit the submit button when otp is sent
+  final PhoneLoginCallback? onPhoneLoginOtp;
 
   /// Called when the user hit the submit button when in login mode
   final LoginCallback onLogin;
@@ -774,6 +778,7 @@ class _FlutterLoginState extends State<FlutterLogin>
             onLogin: widget.onLogin,
             onSignup: widget.onSignup,
             onPhoneLogin: widget.onPhoneLogin,
+            onPhoneLoginOtp: widget.onPhoneLoginOtp,
             onRecoverPassword: widget.onRecoverPassword,
             loginProviders: widget.loginProviders,
             email: widget.savedEmail,

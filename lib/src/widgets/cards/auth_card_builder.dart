@@ -86,6 +86,7 @@ class AuthCard extends StatefulWidget {
 
 class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
   final GlobalKey _loginCardKey = GlobalKey();
+  final GlobalKey _phoneCardKey = GlobalKey();
   final GlobalKey _additionalSignUpCardKey = GlobalKey();
   final GlobalKey _confirmRecoverCardKey = GlobalKey();
   final GlobalKey _confirmSignUpCardKey = GlobalKey();
@@ -394,6 +395,7 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
             });
       case _phoneIndex:
         return PhoneCard(
+          key: _phoneCardKey,
           loadingController: formController,
           requireAdditionalSignUpFields: widget.additionalSignUpFields != null,
           onSwitchConfirmSignup: () => _changeCard(_confirmSignup),
@@ -401,6 +403,11 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
           onBack: () => _changeCard(_landingPageIndex),
           onSwitchSignUpAdditionalData: () =>
               _changeCard(_additionalSignUpIndex),
+          onSubmitCompleted: () {
+            _forwardChangeRouteAnimation(_phoneCardKey).then((_) {
+              widget.onSubmitCompleted!();
+            });
+          },
         );
       case _additionalSignUpIndex:
         if (widget.additionalSignUpFields == null) {

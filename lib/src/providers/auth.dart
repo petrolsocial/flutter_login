@@ -45,6 +45,7 @@ class Auth with ChangeNotifier {
       this.onLogin,
       this.onSignup,
       this.onPhoneLogin,
+      this.onPhoneLoginOtp,
       this.onRecoverPassword,
       this.onConfirmRecover,
       this.onConfirmSignup,
@@ -62,6 +63,7 @@ class Auth with ChangeNotifier {
   final LoginCallback? onLogin;
   final SignupCallback? onSignup;
   final PhoneLoginCallback? onPhoneLogin;
+  final PhoneLoginCallback? onPhoneLoginOtp;
   final RecoverCallback? onRecoverPassword;
   final List<LoginProvider> loginProviders;
   final ConfirmRecoverCallback? onConfirmRecover;
