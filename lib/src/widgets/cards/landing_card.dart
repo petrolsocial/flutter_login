@@ -81,7 +81,7 @@ class _LandingCardState extends State<LandingCard>
         children: [
           _buildButtonColumn(theme, messages, buttonProvidersList, loginTheme),
           iconProvidersList.isNotEmpty
-              ? _buildProvidersTitleSecond(messages)
+              ? _buildProvidersTitleFirst(messages)
               : Container(),
           _buildIconRow(theme, messages, iconProvidersList, loginTheme),
         ],
@@ -181,6 +181,10 @@ class _LandingCardState extends State<LandingCard>
     final cardWidth = min(MediaQuery.of(context).size.width * 0.75, 360.0);
     const cardPadding = 16.0;
     final textFieldWidth = cardWidth - cardPadding * 2;
+
+    TextStyle defaultStyle = TextStyle(color: Colors.grey, fontSize: 12.0);
+    TextStyle linkStyle = TextStyle(color: Colors.blue);
+
     final authForm = Form(
       key: _formKey,
       child: Column(
@@ -267,10 +271,35 @@ class _LandingCardState extends State<LandingCard>
                       ),
                       auth.loginProviders.isNotEmpty &&
                               !widget.hideProvidersTitle
-                          ? _buildProvidersTitleFirst(messages)
+                          ? _buildProvidersTitleSecond(messages)
                           : Container(),
                       _buildProvidersLogInButton(
                           theme, messages, auth, loginTheme),
+                      RichText(
+                        text: TextSpan(
+                          style: defaultStyle,
+                          children: <TextSpan>[
+                            const TextSpan(
+                                text: 'By signing up, you agree to our '),
+                            TextSpan(
+                                text: auth.termsOfService[0].text,
+                                style: linkStyle,
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    launch(auth.termsOfService[0].linkUrl!);
+                                  }),
+                            const TextSpan(
+                                text: ' and that you have read our '),
+                            TextSpan(
+                                text: auth.termsOfService[1].text,
+                                style: linkStyle,
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    launch(auth.termsOfService[1].linkUrl!);
+                                  }),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),

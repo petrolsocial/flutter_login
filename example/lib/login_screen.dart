@@ -107,27 +107,27 @@ class LoginScreen extends StatelessWidget {
             text: 'Term of services',
             linkUrl: 'https://github.com/NearHuscarl/flutter_login'),
       ],
-      additionalSignupFields: [
-        const UserFormField(
-            keyName: 'Username', icon: Icon(FontAwesomeIcons.userAlt)),
-        const UserFormField(keyName: 'Name'),
-        const UserFormField(keyName: 'Surname'),
-        UserFormField(
-          keyName: 'phone_number',
-          displayName: 'Phone Number',
-          userType: LoginUserType.phone,
-          fieldValidator: (value) {
-            var phoneRegExp = RegExp(
-                '^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}\$');
-            if (value != null &&
-                value.length < 7 &&
-                !phoneRegExp.hasMatch(value)) {
-              return "This isn't a valid phone number";
-            }
-            return null;
-          },
-        ),
-      ],
+      // additionalSignupFields: [
+      //   const UserFormField(
+      //       keyName: 'Username', icon: Icon(FontAwesomeIcons.userAlt)),
+      //   const UserFormField(keyName: 'Name'),
+      //   const UserFormField(keyName: 'Surname'),
+      //   UserFormField(
+      //     keyName: 'phone_number',
+      //     displayName: 'Phone Number',
+      //     userType: LoginUserType.phone,
+      //     fieldValidator: (value) {
+      //       var phoneRegExp = RegExp(
+      //           '^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}\$');
+      //       if (value != null &&
+      //           value.length < 7 &&
+      //           !phoneRegExp.hasMatch(value)) {
+      //         return "This isn't a valid phone number";
+      //       }
+      //       return null;
+      //     },
+      //   ),
+      // ],
       initialAuthMode: AuthMode.login,
       // hideProvidersTitle: false,
       // loginAfterSignUp: false,

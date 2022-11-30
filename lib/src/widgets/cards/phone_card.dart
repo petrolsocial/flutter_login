@@ -40,9 +40,15 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
 
   /// switch between login and signup
   late AnimationController _otpController;
+
+  late AnimationController _switchAuthController;
   late AnimationController _postSwitchAuthController;
+
   late AnimationController _submitController;
   late final ScrollController scrollController;
+  final TextEditingController nameController = TextEditingController();
+
+  Interval? _textButtonLoadingAnimationInterval;
 
   ///list of AnimationController each one responsible for a authentication provider icon
   List<AnimationController> _providerControllerList = <AnimationController>[];
@@ -64,6 +70,10 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
+    _switchAuthController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
     _postSwitchAuthController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 150),
@@ -80,6 +90,9 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
           ),
         )
         .toList();
+
+    _textButtonLoadingAnimationInterval =
+        const Interval(.6, 1.0, curve: Curves.easeOut);
 
     _buttonScaleAnimation =
         Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
@@ -105,6 +118,10 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
 
     _otpController.dispose();
     _postSwitchAuthController.dispose();
+    _switchAuthController.dispose();
+
+    nameController.dispose();
+
     _submitController.dispose();
     scrollController.dispose();
 
@@ -122,6 +139,10 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
 
     final messages = Provider.of<LoginMessages>(context, listen: false);
 
+    if (!_formKey.currentState!.validate()) {
+      return false;
+    }
+
     _formKey.currentState!.save();
     await _submitController.forward();
     setState(() => _isSubmitting = true);
@@ -130,9 +151,12 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
 
     auth.authType = AuthType.userPassword;
 
-    error = await auth.onPhoneLogin?.call(PhoneLoginData(
-      phoneNumber: auth.phoneNumber,
-    ));
+    error = await auth.onPhoneLogin?.call(
+      PhoneLoginData(
+        phoneNumber: auth.phoneNumber,
+        additionalSignupData: {'Username': nameController.text},
+      ),
+    );
 
     // workaround to run after _cardSizeAnimation in parent finished
     // need a cleaner way but currently it works so..
@@ -176,6 +200,29 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildNameField(
+    Auth auth,
+    double width,
+  ) {
+    return AnimatedTextFormField(
+      controller: nameController,
+      // interval: _fieldAnimationIntervals[widget.formFields.indexOf(formField)],
+      loadingController: widget.loadingController,
+      width: width,
+      labelText: 'Display Name',
+      prefixIcon: const Icon(FontAwesomeIcons.solidUserCircle),
+      keyboardType: TextFieldUtils.getKeyboardType(LoginUserType.name),
+      autofillHints: [TextFieldUtils.getAutofillHints(LoginUserType.name)],
+      validator: (value) {
+        if (auth.isSignup && value != null && value.length < 4) {
+          return "Display name has to be at least 4 characters.";
+        }
+        return null;
+      },
+      enabled: !_isSubmitting,
+    );
+  }
+
   Widget _buildSubmitButton(
       ThemeData theme, LoginMessages messages, Auth auth) {
     return ScaleTransition(
@@ -188,9 +235,47 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
     );
   }
 
+  void _switchAuthMode() {
+    final auth = Provider.of<Auth>(context, listen: false);
+    final newAuthMode = auth.switchAuth();
+
+    if (newAuthMode == AuthMode.signup) {
+      _switchAuthController.forward();
+    } else {
+      _switchAuthController.reverse();
+    }
+  }
+
+  Widget _buildSwitchAuthButton(ThemeData theme, LoginMessages messages,
+      Auth auth, LoginTheme loginTheme) {
+    final calculatedTextColor =
+        (theme.cardTheme.color!.computeLuminance() < 0.5)
+            ? Colors.white
+            : theme.primaryColor;
+    return FadeIn(
+      controller: widget.loadingController,
+      offset: .5,
+      curve: _textButtonLoadingAnimationInterval,
+      fadeDirection: FadeDirection.topToBottom,
+      child: MaterialButton(
+        disabledTextColor: theme.primaryColor,
+        onPressed: buttonEnabled ? _switchAuthMode : null,
+        padding: loginTheme.authButtonPadding ??
+            const EdgeInsets.symmetric(horizontal: 30.0, vertical: 8.0),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        textColor: loginTheme.switchAuthTextColor ?? calculatedTextColor,
+        child: AnimatedText(
+          text: auth.isSignup ? messages.loginButton : messages.signupButton,
+          textRotation: AnimatedTextRotation.down,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<Auth>(context, listen: true);
+    final isLogin = auth.isLogin;
     final messages = Provider.of<LoginMessages>(context, listen: false);
     final loginTheme = Provider.of<LoginTheme>(context, listen: false);
     final theme = Theme.of(context);
@@ -212,6 +297,24 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 _buildPhoneNumberField(auth),
+                ExpandableContainer(
+                  backgroundColor: _switchAuthController.isCompleted
+                      ? null
+                      : theme.colorScheme.secondary,
+                  controller: _switchAuthController,
+                  initialState: isLogin
+                      ? ExpandableContainerState.shrunk
+                      : ExpandableContainerState.expanded,
+                  alignment: Alignment.topLeft,
+                  color: theme.cardTheme.color,
+                  width: cardWidth,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: cardPadding,
+                    vertical: 10,
+                  ),
+                  onExpandCompleted: () => _postSwitchAuthController.forward(),
+                  child: _buildNameField(auth, textFieldWidth),
+                ),
                 ExpandableContainer(
                   backgroundColor: _otpController.isCompleted
                       ? null
@@ -239,7 +342,9 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
             width: cardWidth,
             child: Column(
               children: <Widget>[
-                _buildSubmitButton(theme, messages, auth),
+                if (!_isSubmitting) _buildSubmitButton(theme, messages, auth),
+                if (!_isSubmitting)
+                  _buildSwitchAuthButton(theme, messages, auth, loginTheme),
                 _buildBackButton(theme, messages, loginTheme),
               ],
             ),
@@ -270,6 +375,7 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
               PhoneLoginData(
                 phoneNumber: auth.phoneNumber,
                 otp: enteredOtp,
+                additionalSignupData: {'Username': nameController.text},
               ),
             );
 
@@ -303,12 +409,10 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
             ? Colors.white
             : theme.primaryColor;
     return MaterialButton(
-      onPressed: !_isSubmitting
-          ? () {
-              _formKey.currentState!.save();
-              widget.onBack();
-            }
-          : null,
+      onPressed: () {
+        _formKey.currentState!.save();
+        widget.onBack();
+      },
       padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 4),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       textColor: loginTheme?.switchAuthTextColor ?? calculatedTextColor,

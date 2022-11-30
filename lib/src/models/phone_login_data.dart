@@ -3,8 +3,13 @@ import 'package:quiver/core.dart';
 class PhoneLoginData {
   final String phoneNumber;
   final String? otp;
+  final Map<String, String>? additionalSignupData;
 
-  PhoneLoginData({required this.phoneNumber, this.otp});
+  PhoneLoginData({
+    required this.phoneNumber,
+    this.otp,
+    this.additionalSignupData,
+  });
 
   @override
   String toString() {
@@ -20,5 +25,5 @@ class PhoneLoginData {
   }
 
   @override
-  int get hashCode => hash2(phoneNumber, otp ?? '');
+  int get hashCode => hash3(phoneNumber, otp, additionalSignupData);
 }

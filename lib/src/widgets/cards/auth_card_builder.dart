@@ -4,6 +4,7 @@ import 'dart:collection';
 import 'dart:math';
 
 import 'package:another_transformer_page_view/another_transformer_page_view.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
 import 'package:flutter_login/src/constants.dart';
@@ -21,6 +22,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../flutter_login.dart';
 import '../animated_button.dart';

@@ -69,6 +69,8 @@ class _EmailCardState extends State<EmailCard> with TickerProviderStateMixin {
   Interval? _textButtonLoadingAnimationInterval;
   late Animation<double> _buttonScaleAnimation;
 
+  final TextEditingController nameController = TextEditingController();
+
   bool get buttonEnabled => !_isLoading && !_isSubmitting;
 
   @override
@@ -129,6 +131,8 @@ class _EmailCardState extends State<EmailCard> with TickerProviderStateMixin {
     _passwordFocusNode.dispose();
     _confirmPasswordFocusNode.dispose();
 
+    nameController.dispose();
+
     _switchAuthController.dispose();
     _postSwitchAuthController.dispose();
     _submitController.dispose();
@@ -182,11 +186,14 @@ class _EmailCardState extends State<EmailCard> with TickerProviderStateMixin {
       ));
     } else {
       if (!widget.requireAdditionalSignUpFields) {
-        error = await auth.onSignup!(SignupData.fromSignupForm(
+        error = await auth.onSignup!(
+          SignupData.fromSignupForm(
             name: auth.email,
             password: auth.password,
             isAnonymous: auth.isAnonymous,
-            termsOfService: auth.getTermsOfServiceResults()));
+            additionalSignupData: {'Username': nameController.text},
+          ),
+        );
       }
     }
 
@@ -307,6 +314,29 @@ class _EmailCardState extends State<EmailCard> with TickerProviderStateMixin {
       },
       validator: widget.userValidator,
       onSaved: (value) => auth.email = value!,
+      enabled: !_isSubmitting,
+    );
+  }
+
+  Widget _buildNameField(
+    Auth auth,
+    double width,
+  ) {
+    return AnimatedTextFormField(
+      controller: nameController,
+      // interval: _fieldAnimationIntervals[widget.formFields.indexOf(formField)],
+      loadingController: widget.loadingController,
+      width: width,
+      labelText: 'Display Name',
+      prefixIcon: const Icon(FontAwesomeIcons.solidUserCircle),
+      keyboardType: TextFieldUtils.getKeyboardType(LoginUserType.name),
+      autofillHints: [TextFieldUtils.getAutofillHints(LoginUserType.name)],
+      validator: (value) {
+        if (auth.isSignup && value != null && value.length < 4) {
+          return "Display name has to be at least 4 characters.";
+        }
+        return null;
+      },
       enabled: !_isSubmitting,
     );
   }
@@ -474,6 +504,24 @@ class _EmailCardState extends State<EmailCard> with TickerProviderStateMixin {
             ),
             onExpandCompleted: () => _postSwitchAuthController.forward(),
             child: _buildConfirmPasswordField(textFieldWidth, messages, auth),
+          ),
+          ExpandableContainer(
+            backgroundColor: _switchAuthController.isCompleted
+                ? null
+                : theme.colorScheme.secondary,
+            controller: _switchAuthController,
+            initialState: isLogin
+                ? ExpandableContainerState.shrunk
+                : ExpandableContainerState.expanded,
+            alignment: Alignment.topLeft,
+            color: theme.cardTheme.color,
+            width: cardWidth,
+            padding: const EdgeInsets.symmetric(
+              horizontal: cardPadding,
+              vertical: 10,
+            ),
+            onExpandCompleted: () => _postSwitchAuthController.forward(),
+            child: _buildNameField(auth, textFieldWidth),
           ),
           Container(
             padding: Paddings.fromRBL(cardPadding),
