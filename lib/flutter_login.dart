@@ -29,6 +29,7 @@ import 'theme.dart';
 export 'src/models/login_data.dart';
 export 'src/models/login_user_type.dart';
 export 'src/models/signup_data.dart';
+export 'src/models/phone_login_data.dart';
 export 'src/models/user_form_field.dart';
 export 'src/providers/login_messages.dart';
 export 'src/providers/login_theme.dart';
