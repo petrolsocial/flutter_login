@@ -59,6 +59,12 @@ class LoginScreen extends StatelessWidget {
       navigateBackAfterRecovery: true,
       onConfirmRecover: _signupConfirm,
       onConfirmSignup: _signupConfirm,
+      onPhoneLogin: (p0) async {
+        return null;
+      },
+      onPhoneLoginOtp: (p0) {
+        return null;
+      },
       loginAfterSignUp: false,
       enableAnonAuth: true,
       loginProviders: [

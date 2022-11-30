@@ -86,6 +86,7 @@ class AuthCard extends StatefulWidget {
 
 class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
   final GlobalKey _loginCardKey = GlobalKey();
+  final GlobalKey _emailCardKey = GlobalKey();
   final GlobalKey _phoneCardKey = GlobalKey();
   final GlobalKey _additionalSignUpCardKey = GlobalKey();
   final GlobalKey _confirmRecoverCardKey = GlobalKey();
@@ -338,18 +339,24 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
         );
       case _emailPageIndex:
         return EmailCard(
-          loadingController: formController,
-          userValidator: widget.userValidator,
-          passwordValidator: widget.passwordValidator,
-          onSwitchRecoveryPassword: () => _changeCard(_recoveryIndex),
-          onSwitchSignUpAdditionalData: () =>
-              _changeCard(_additionalSignUpIndex),
-          userType: widget.userType,
-          requireAdditionalSignUpFields: widget.additionalSignUpFields != null,
-          onSwitchConfirmSignup: () => _changeCard(_confirmSignup),
-          requireSignUpConfirmation: auth.onConfirmSignup != null,
-          onBack: () => _changeCard(_landingPageIndex),
-        );
+            key: _emailCardKey,
+            loadingController: formController,
+            userValidator: widget.userValidator,
+            passwordValidator: widget.passwordValidator,
+            onSwitchRecoveryPassword: () => _changeCard(_recoveryIndex),
+            onSwitchSignUpAdditionalData: () =>
+                _changeCard(_additionalSignUpIndex),
+            userType: widget.userType,
+            requireAdditionalSignUpFields:
+                widget.additionalSignUpFields != null,
+            onSwitchConfirmSignup: () => _changeCard(_confirmSignup),
+            requireSignUpConfirmation: auth.onConfirmSignup != null,
+            onBack: () => _changeCard(_landingPageIndex),
+            onSubmitCompleted: () {
+              _forwardChangeRouteAnimation(_emailCardKey).then((_) {
+                widget.onSubmitCompleted!();
+              });
+            });
       case _loginPageIndex:
         return _buildLoadingAnimator(
           theme: Theme.of(context),

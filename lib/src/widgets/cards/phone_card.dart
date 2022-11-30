@@ -134,18 +134,6 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
       phoneNumber: auth.phoneNumber,
     ));
 
-    // if () {
-
-    // } else {
-    //   if (!widget.requireAdditionalSignUpFields) {
-    //     error = await auth.onSignup!(SignupData.fromSignupForm(
-    //         name: auth.email,
-    //         password: auth.password,
-    //         isAnonymous: auth.isAnonymous,
-    //         termsOfService: auth.getTermsOfServiceResults()));
-    //   }
-    // }
-
     // workaround to run after _cardSizeAnimation in parent finished
     // need a cleaner way but currently it works so..
     Future.delayed(const Duration(milliseconds: 270), () {
@@ -275,7 +263,6 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
         PinInputField(
           length: 6,
           onFocusChange: (hasFocus) async {
-            print('on FC');
             if (hasFocus) await _scrollToBottomOnKeyboardOpen();
           },
           onSubmit: (enteredOtp) async {
@@ -296,6 +283,10 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
                 }
               });
               setState(() => _isSubmitting = false);
+            }
+            if (widget.requireAdditionalSignUpFields) {
+              widget.onSwitchSignUpAdditionalData();
+              return;
             }
 
             widget.onSubmitCompleted?.call();
