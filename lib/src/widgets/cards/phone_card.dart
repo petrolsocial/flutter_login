@@ -240,7 +240,7 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
                     vertical: 10,
                   ),
                   onExpandCompleted: () => _postSwitchAuthController.forward(),
-                  child: _buildOTPField(),
+                  child: _buildOTPField(auth, messages),
                 ),
               ],
             ),
