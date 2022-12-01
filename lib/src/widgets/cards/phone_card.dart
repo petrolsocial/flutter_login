@@ -113,11 +113,30 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
     }
   }
 
-  void onVerificationStatusChanged() {
+  void onVerificationStatusChanged() async {
     if (widget.phoneLoginVerificationStatusNotifier!.value != null) {
-      // error
+      // failed
+      final messages = Provider.of<LoginMessages>(context, listen: false);
+      showErrorToast(context, messages.flushbarTitleError,
+          widget.phoneLoginVerificationStatusNotifier!.value!);
+      Future.delayed(const Duration(milliseconds: 271), () {
+        if (mounted) {
+          setState(() => _showShadow = true);
+        }
+      });
+      setState(() => _isSubmitting = false);
     } else {
       // success
+      await _submitController.reverse();
+
+      if (widget.requireAdditionalSignUpFields) {
+        widget.onSwitchSignUpAdditionalData();
+        return;
+      }
+
+      await _otpController.reverse();
+
+      widget.onSubmitCompleted?.call();
     }
   }
 

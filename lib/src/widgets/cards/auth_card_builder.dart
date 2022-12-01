@@ -411,6 +411,9 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
         return PhoneCard(
           key: _phoneCardKey,
           loadingController: formController,
+          phoneLoginOtpSentNotifier: widget.phoneLoginOtpSentNotifier,
+          phoneLoginVerificationStatusNotifier:
+              widget.phoneLoginVerificationStatusNotifier,
           requireAdditionalSignUpFields: widget.additionalSignUpFields != null,
           onSwitchConfirmSignup: () => _changeCard(_confirmSignup),
           requireSignUpConfirmation: auth.onConfirmSignup != null,
