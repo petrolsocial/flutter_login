@@ -336,7 +336,7 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
               return;
             }
 
-            await _postSwitchAuthController.reverse();
+            await _otpController.reverse();
 
             widget.onSubmitCompleted?.call();
           },
