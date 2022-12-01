@@ -35,6 +35,8 @@ export 'src/providers/login_messages.dart';
 export 'src/providers/login_theme.dart';
 export 'src/models/term_of_service.dart';
 export 'src/providers/auth.dart';
+export 'src/widgets/animated_text_form_field.dart';
+export 'src/widgets/animated_button.dart';
 
 class LoginProvider {
   /// Used for custom sign-in buttons.
@@ -311,7 +313,9 @@ class FlutterLogin extends StatefulWidget {
       this.savedPassword = '',
       this.initialAuthMode = AuthMode.login,
       this.children,
-      dynamic backgroundImage})
+      dynamic backgroundImage,
+      this.phoneLoginOtpSentNotifier,
+      this.phoneLoginVerificationStatusNotifier})
       : assert((logo is String?) || (logo is ImageProvider?)),
         logo = logo is String ? AssetImage(logo) : logo,
         assert((backgroundImage is String?) ||
@@ -446,6 +450,14 @@ class FlutterLogin extends StatefulWidget {
 
   /// Image that is applied at the bottom of the stack as a background.
   final ImageProvider? backgroundImage;
+
+  /// Notifier for phone verification on mobile. This one tells this package
+  /// that the otp has been sent.
+  final ValueNotifier<bool>? phoneLoginOtpSentNotifier;
+
+  /// Notifier for phone verification on mobile. This one tells this package
+  /// that the verification status.
+  final ValueNotifier<String?>? phoneLoginVerificationStatusNotifier;
 
   static String? defaultEmailValidator(value) {
     if (value!.isEmpty || !Regex.email.hasMatch(value)) {
@@ -775,6 +787,8 @@ class _FlutterLoginState extends State<FlutterLogin>
         ),
         ChangeNotifierProvider(
           create: (context) => Auth(
+            widget.phoneLoginOtpSentNotifier,
+            widget.phoneLoginVerificationStatusNotifier,
             onLogin: widget.onLogin,
             onSignup: widget.onSignup,
             onPhoneLogin: widget.onPhoneLogin,

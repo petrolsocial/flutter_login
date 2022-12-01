@@ -41,6 +41,7 @@ typedef ConfirmRecoverCallback = Future<String?>? Function(String, LoginData);
 
 class Auth with ChangeNotifier {
   Auth(
+      this.phoneLoginOtpSentNotifier, this.phoneLoginVerificationStatusNotifier,
       {this.loginProviders = const [],
       this.onLogin,
       this.onSignup,
@@ -70,6 +71,8 @@ class Auth with ChangeNotifier {
   final ConfirmSignupCallback? onConfirmSignup;
   final SignupCallback? onResendCode;
   final List<TermOfService> termsOfService;
+  final ValueNotifier<bool>? phoneLoginOtpSentNotifier;
+  final ValueNotifier<String?>? phoneLoginVerificationStatusNotifier;
 
   AuthType _authType = AuthType.userPassword;
   bool isAnonymous = false;

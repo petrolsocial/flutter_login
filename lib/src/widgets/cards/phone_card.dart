@@ -11,6 +11,8 @@ class PhoneCard extends StatefulWidget {
     required this.onBack,
     this.onSwitchAuth,
     this.onSubmitCompleted,
+    this.phoneLoginOtpSentNotifier,
+    this.phoneLoginVerificationStatusNotifier,
   }) : super(key: key);
 
   final AnimationController loadingController;
@@ -21,6 +23,9 @@ class PhoneCard extends StatefulWidget {
   final Function onBack;
   final bool requireAdditionalSignUpFields;
   final bool requireSignUpConfirmation;
+
+  final ValueNotifier<bool>? phoneLoginOtpSentNotifier;
+  final ValueNotifier<String?>? phoneLoginVerificationStatusNotifier;
 
   @override
   _PhoneCardState createState() => _PhoneCardState();
@@ -60,6 +65,12 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+
+    widget.phoneLoginOtpSentNotifier?.addListener(onOtpSent);
+    widget.phoneLoginVerificationStatusNotifier
+        ?.addListener(onVerificationStatusChanged);
+
+    if (widget.phoneLoginOtpSentNotifier != null) {}
 
     final auth = Provider.of<Auth>(context, listen: false);
     scrollController = ScrollController();
@@ -101,6 +112,20 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
     ));
   }
 
+  void onOtpSent() {
+    if (widget.phoneLoginOtpSentNotifier!.value) {
+      _otpController.forward();
+    }
+  }
+
+  void onVerificationStatusChanged() {
+    if (widget.phoneLoginVerificationStatusNotifier!.value != null) {
+      // error
+    } else {
+      // success
+    }
+  }
+
   void handleLoadingAnimationStatus(AnimationStatus status) {
     if (status == AnimationStatus.forward) {
       setState(() => _isLoading = true);
@@ -112,6 +137,10 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    widget.phoneLoginOtpSentNotifier?.removeListener(onOtpSent);
+    widget.phoneLoginVerificationStatusNotifier
+        ?.removeListener(onVerificationStatusChanged);
+
     widget.loadingController.removeStatusListener(handleLoadingAnimationStatus);
     _passwordFocusNode.dispose();
     _confirmPasswordFocusNode.dispose();
@@ -179,8 +208,10 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
       return false;
     }
 
+    if (widget.phoneLoginOtpSentNotifier != null) {
+      return false;
+    }
     _otpController.forward();
-    //widget.onSubmitCompleted?.call();
 
     return true;
   }

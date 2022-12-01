@@ -60,7 +60,9 @@ class AuthCard extends StatefulWidget {
       this.additionalSignUpFields,
       this.disableCustomPageTransformer = false,
       this.loginTheme,
-      this.navigateBackAfterRecovery = false})
+      this.navigateBackAfterRecovery = false,
+      this.phoneLoginOtpSentNotifier,
+      this.phoneLoginVerificationStatusNotifier})
       : super(key: key);
 
   final EdgeInsets padding;
@@ -81,6 +83,9 @@ class AuthCard extends StatefulWidget {
   final bool disableCustomPageTransformer;
   final LoginTheme? loginTheme;
   final bool navigateBackAfterRecovery;
+
+  final ValueNotifier<bool>? phoneLoginOtpSentNotifier;
+  final ValueNotifier<String?>? phoneLoginVerificationStatusNotifier;
 
   @override
   AuthCardState createState() => AuthCardState();

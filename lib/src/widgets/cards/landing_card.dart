@@ -280,7 +280,7 @@ class _LandingCardState extends State<LandingCard>
                           style: defaultStyle,
                           children: <TextSpan>[
                             const TextSpan(
-                                text: 'By signing up, you agree to our '),
+                                text: 'By signing up, you agree to the '),
                             TextSpan(
                                 text: auth.termsOfService[0].text,
                                 style: linkStyle,
@@ -288,8 +288,7 @@ class _LandingCardState extends State<LandingCard>
                                   ..onTap = () {
                                     launch(auth.termsOfService[0].linkUrl!);
                                   }),
-                            const TextSpan(
-                                text: ' and that you have read our '),
+                            const TextSpan(text: ' and '),
                             TextSpan(
                                 text: auth.termsOfService[1].text,
                                 style: linkStyle,
