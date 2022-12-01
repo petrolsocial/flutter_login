@@ -46,6 +46,8 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
   /// switch between login and signup
   late AnimationController _otpController;
 
+  late AnimationController _postSwitchAuthController;
+
   late AnimationController _submitController;
   late final ScrollController scrollController;
 
@@ -78,6 +80,10 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 800),
     );
 
+    _postSwitchAuthController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
     _submitController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -135,6 +141,7 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
     _confirmPasswordFocusNode.dispose();
 
     _otpController.dispose();
+    _postSwitchAuthController.dispose();
 
     _submitController.dispose();
     scrollController.dispose();
@@ -252,6 +259,24 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 _buildPhoneNumberField(auth),
+                ExpandableContainer(
+                  backgroundColor: _otpController.isCompleted
+                      ? null
+                      : theme.colorScheme.secondary,
+                  controller: _otpController,
+                  initialState: !_otpSent
+                      ? ExpandableContainerState.shrunk
+                      : ExpandableContainerState.expanded,
+                  alignment: Alignment.topLeft,
+                  color: theme.cardTheme.color,
+                  width: cardWidth,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: cardPadding,
+                    vertical: 10,
+                  ),
+                  onExpandCompleted: () => _postSwitchAuthController.forward(),
+                  child: _buildOTPField(auth, messages),
+                ),
               ],
             ),
           ),
