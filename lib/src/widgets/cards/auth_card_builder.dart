@@ -366,34 +366,6 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
                 widget.onSubmitCompleted!();
               });
             });
-      case _loginPageIndex:
-        return _buildLoadingAnimator(
-          theme: Theme.of(context),
-          child: _LoginCard(
-            key: _loginCardKey,
-            userType: widget.userType,
-            loadingController: formController,
-            userValidator: widget.userValidator,
-            passwordValidator: widget.passwordValidator,
-            requireAdditionalSignUpFields:
-                widget.additionalSignUpFields != null,
-            onSwitchRecoveryPassword: () => _changeCard(_recoveryIndex),
-            onSwitchSignUpAdditionalData: () =>
-                _changeCard(_additionalSignUpIndex),
-            onSubmitCompleted: () {
-              _forwardChangeRouteAnimation(_loginCardKey).then((_) {
-                widget.onSubmitCompleted!();
-              });
-            },
-            requireSignUpConfirmation: auth.onConfirmSignup != null,
-            onSwitchConfirmSignup: () => _changeCard(_confirmSignup),
-            hideSignUpButton: widget.hideSignUpButton,
-            enableAnonAuth: widget.enableAnonAuth,
-            hideForgotPasswordButton: widget.hideForgotPasswordButton,
-            loginAfterSignUp: widget.loginAfterSignUp,
-            hideProvidersTitle: widget.hideProvidersTitle,
-          ),
-        );
       case _recoveryIndex:
         return _RecoverCard(
             userValidator: widget.userValidator,
@@ -401,12 +373,12 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
             loginTheme: widget.loginTheme,
             loadingController: formController,
             navigateBack: widget.navigateBackAfterRecovery,
-            onBack: () => _changeCard(_loginPageIndex),
+            onBack: () => _changeCard(_landingPageIndex),
             onSubmitCompleted: () {
               if (auth.onConfirmRecover != null) {
                 _changeCard(_confirmRecover);
               } else {
-                _changeCard(_loginPageIndex);
+                _changeCard(_landingPageIndex);
               }
             });
       case _phoneIndex:
@@ -440,7 +412,7 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
             key: _additionalSignUpCardKey,
             formFields: widget.additionalSignUpFields!,
             loadingController: formController,
-            onBack: () => _changeCard(_loginPageIndex),
+            onBack: () => _changeCard(_landingPageIndex),
             loginTheme: widget.loginTheme,
             onSubmitCompleted: () {
               if (auth.onConfirmSignup != null) {
@@ -451,7 +423,7 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
                   widget.onSubmitCompleted!();
                 });
               } else {
-                _changeCard(_loginPageIndex);
+                _changeCard(_landingPageIndex);
               }
             },
           ),
@@ -461,8 +433,8 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
         return _ConfirmRecoverCard(
           key: _confirmRecoverCardKey,
           passwordValidator: widget.passwordValidator!,
-          onBack: () => _changeCard(_loginPageIndex),
-          onSubmitCompleted: () => _changeCard(_loginPageIndex),
+          onBack: () => _changeCard(_landingPageIndex),
+          onSubmitCompleted: () => _changeCard(_landingPageIndex),
         );
 
       case _confirmSignup:
@@ -471,7 +443,7 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
           child: _ConfirmSignupCard(
             key: _confirmSignUpCardKey,
             onBack: () => auth.additionalSignupData == null
-                ? _changeCard(_loginPageIndex)
+                ? _changeCard(_landingPageIndex)
                 : _changeCard(_additionalSignUpIndex),
             loadingController: formController,
             onSubmitCompleted: () {
@@ -480,7 +452,7 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
                   widget.onSubmitCompleted!();
                 });
               } else {
-                _changeCard(_loginPageIndex);
+                _changeCard(_landingPageIndex);
               }
             },
             loginAfterSignUp: widget.loginAfterSignUp,
