@@ -103,14 +103,13 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
 
   static const int _landingPageIndex = 0;
   static const int _emailPageIndex = 1;
-  static const int _loginPageIndex = 2;
-  static const int _recoveryIndex = 3;
-  static const int _phoneIndex = 4;
-  static const int _additionalSignUpIndex = 5;
-  static const int _confirmSignup = 6;
-  static const int _confirmRecover = 7;
+  static const int _recoveryIndex = 2;
+  static const int _phoneIndex = 3;
+  static const int _additionalSignUpIndex = 4;
+  static const int _confirmSignup = 5;
+  static const int _confirmRecover = 6;
 
-  int _pageIndex = _loginPageIndex;
+  int _pageIndex = _landingPageIndex;
 
   var _isLoadingFirstTime = true;
   static const cardSizeScaleEnd = .2;
@@ -341,6 +340,7 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
         return _buildLoadingAnimator(
           theme: Theme.of(context),
           child: LandingCard(
+            onSubmitCompleted: widget.onSubmitCompleted,
             loadingController: formController,
             onSignInWithEmail: () => _changeCard(_emailPageIndex),
             onSignInWithPhone: () => _changeCard(_phoneIndex),
