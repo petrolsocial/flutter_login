@@ -83,6 +83,7 @@ class _PinInputFieldState extends State<PinInputField> {
     return SizedBox(
       height: size.height * _focusScaleFactor,
       child: Pinput(
+        androidSmsAutofillMethod: AndroidSmsAutofillMethod.smsUserConsentApi,
         length: _length,
         defaultPinTheme: defaultPinTheme,
         focusedPinTheme: defaultPinTheme.copyWith(

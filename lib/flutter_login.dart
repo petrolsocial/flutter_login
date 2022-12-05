@@ -292,6 +292,7 @@ class FlutterLogin extends StatefulWidget {
       this.userValidator,
       this.passwordValidator,
       this.onSubmitAnimationCompleted,
+      this.onAutoVerifiedPhone,
       this.logoTag,
       this.userType = LoginUserType.email,
       this.titleTag,
@@ -376,6 +377,10 @@ class FlutterLogin extends StatefulWidget {
   /// Called after the submit animation's completed. Put your route transition
   /// logic here. Recommend to use with [logoTag] and [titleTag]
   final Function? onSubmitAnimationCompleted;
+
+  /// Called after the submit animation's completed. But in the case of an auto
+  /// verification supported on android.
+  final Function? onAutoVerifiedPhone;
 
   /// Hero tag for logo image. If not specified, it will simply fade out when
   /// changing route
@@ -842,6 +847,7 @@ class _FlutterLoginState extends State<FlutterLogin>
                           passwordValidator: passwordValidator,
                           onSubmit: _reverseHeaderAnimation,
                           onSubmitCompleted: widget.onSubmitAnimationCompleted,
+                          onAutoVerifiedPhone: widget.onAutoVerifiedPhone,
                           hideSignUpButton: widget.onSignup == null,
                           hideForgotPasswordButton:
                               widget.hideForgotPasswordButton,

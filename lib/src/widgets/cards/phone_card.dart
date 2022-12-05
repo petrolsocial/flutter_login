@@ -11,6 +11,7 @@ class PhoneCard extends StatefulWidget {
     required this.onBack,
     this.onSwitchAuth,
     this.onSubmitCompleted,
+    this.onAutoVerifiedPhone,
     this.phoneLoginOtpSentNotifier,
     this.phoneLoginVerificationStatusNotifier,
   }) : super(key: key);
@@ -20,6 +21,7 @@ class PhoneCard extends StatefulWidget {
   final Function onSwitchConfirmSignup;
   final Function? onSwitchAuth;
   final Function? onSubmitCompleted;
+  final Function? onAutoVerifiedPhone;
   final Function onBack;
   final bool requireAdditionalSignUpFields;
   final bool requireSignUpConfirmation;
@@ -136,7 +138,8 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
 
       await _otpController.reverse();
 
-      widget.onSubmitCompleted?.call();
+      print('auto verified');
+      widget.onAutoVerifiedPhone?.call();
     }
   }
 
@@ -232,7 +235,7 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
       autofocus: true,
       invalidNumberMessage: 'Invalid Phone Number!',
       textAlignVertical: TextAlignVertical.center,
-      style: const TextStyle(fontSize: 25),
+      style: const TextStyle(fontSize: 14),
       onChanged: (phone) => auth.phoneNumber = phone.completeNumber,
       initialCountryCode: 'IN',
       flagsButtonPadding: const EdgeInsets.only(left: 10, right: 10),
@@ -357,6 +360,7 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
 
             await _otpController.reverse();
 
+            print('OTP submitted');
             widget.onSubmitCompleted?.call();
           },
         ),

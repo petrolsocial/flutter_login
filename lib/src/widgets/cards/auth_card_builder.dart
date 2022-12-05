@@ -52,6 +52,7 @@ class AuthCard extends StatefulWidget {
       this.passwordValidator,
       this.onSubmit,
       this.onSubmitCompleted,
+      this.onAutoVerifiedPhone,
       this.hideForgotPasswordButton = false,
       this.hideSignUpButton = false,
       this.enableAnonAuth = false,
@@ -71,6 +72,7 @@ class AuthCard extends StatefulWidget {
   final FormFieldValidator<String>? passwordValidator;
   final Function? onSubmit;
   final Function? onSubmitCompleted;
+  final Function? onAutoVerifiedPhone;
   final bool hideForgotPasswordButton;
   final bool hideSignUpButton;
   final bool enableAnonAuth;
@@ -425,6 +427,7 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
               widget.onSubmitCompleted!();
             });
           },
+          onAutoVerifiedPhone: widget.onAutoVerifiedPhone,
         );
       case _additionalSignUpIndex:
         if (widget.additionalSignUpFields == null) {
