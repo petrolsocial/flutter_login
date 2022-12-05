@@ -116,9 +116,11 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
   }
 
   void onVerificationStatusChanged() async {
+    final messages = Provider.of<LoginMessages>(context, listen: false);
+    final auth = Provider.of<Auth>(context, listen: false);
+
     if (widget.phoneLoginVerificationStatusNotifier!.value != null) {
       // failed
-      final messages = Provider.of<LoginMessages>(context, listen: false);
       showErrorToast(context, messages.flushbarTitleError,
           widget.phoneLoginVerificationStatusNotifier!.value!);
       Future.delayed(const Duration(milliseconds: 271), () {
@@ -140,6 +142,7 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
 
       print('auto verified');
       widget.onAutoVerifiedPhone?.call();
+      await _submitOtp(null, auth, messages);
     }
   }
 
@@ -227,6 +230,37 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
     _otpController.forward();
 
     return true;
+  }
+
+  Future<void> _submitOtp(
+      String? enteredOtp, Auth auth, LoginMessages messages) async {
+    var error = await auth.onPhoneLoginOtp?.call(
+      PhoneLoginData(
+        phoneNumber: auth.phoneNumber,
+        otp: enteredOtp,
+      ),
+    );
+
+    await _submitController.reverse();
+
+    if (!DartHelper.isNullOrEmpty(error)) {
+      showErrorToast(context, messages.flushbarTitleError, error!);
+      Future.delayed(const Duration(milliseconds: 271), () {
+        if (mounted) {
+          setState(() => _showShadow = true);
+        }
+      });
+      setState(() => _isSubmitting = false);
+    }
+    if (widget.requireAdditionalSignUpFields) {
+      widget.onSwitchSignUpAdditionalData();
+      return;
+    }
+
+    await _otpController.reverse();
+
+    print('OTP submitted');
+    widget.onSubmitCompleted?.call();
   }
 
   Widget _buildPhoneNumberField(Auth auth) {
@@ -334,35 +368,9 @@ class _PhoneCardState extends State<PhoneCard> with TickerProviderStateMixin {
           onFocusChange: (hasFocus) async {
             if (hasFocus) await _scrollToBottomOnKeyboardOpen();
           },
-          onSubmit: (enteredOtp) async {
-            var error = await auth.onPhoneLoginOtp?.call(
-              PhoneLoginData(
-                phoneNumber: auth.phoneNumber,
-                otp: enteredOtp,
-              ),
-            );
-
-            await _submitController.reverse();
-
-            if (!DartHelper.isNullOrEmpty(error)) {
-              showErrorToast(context, messages.flushbarTitleError, error!);
-              Future.delayed(const Duration(milliseconds: 271), () {
-                if (mounted) {
-                  setState(() => _showShadow = true);
-                }
-              });
-              setState(() => _isSubmitting = false);
-            }
-            if (widget.requireAdditionalSignUpFields) {
-              widget.onSwitchSignUpAdditionalData();
-              return;
-            }
-
-            await _otpController.reverse();
-
-            print('OTP submitted');
-            widget.onSubmitCompleted?.call();
-          },
+          onSubmit: ((enteredOtp) async {
+            await _submitOtp(enteredOtp, auth, messages);
+          }),
         ),
       ],
     );
