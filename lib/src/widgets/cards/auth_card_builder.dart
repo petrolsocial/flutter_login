@@ -373,12 +373,12 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
             loginTheme: widget.loginTheme,
             loadingController: formController,
             navigateBack: widget.navigateBackAfterRecovery,
-            onBack: () => _changeCard(_landingPageIndex),
+            onBack: () => _changeCard(_emailPageIndex),
             onSubmitCompleted: () {
               if (auth.onConfirmRecover != null) {
                 _changeCard(_confirmRecover);
               } else {
-                _changeCard(_landingPageIndex);
+                _changeCard(_emailPageIndex);
               }
             });
       case _phoneIndex:
@@ -433,8 +433,8 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
         return _ConfirmRecoverCard(
           key: _confirmRecoverCardKey,
           passwordValidator: widget.passwordValidator!,
-          onBack: () => _changeCard(_landingPageIndex),
-          onSubmitCompleted: () => _changeCard(_landingPageIndex),
+          onBack: () => _changeCard(_emailPageIndex),
+          onSubmitCompleted: () => _changeCard(_emailPageIndex),
         );
 
       case _confirmSignup:
