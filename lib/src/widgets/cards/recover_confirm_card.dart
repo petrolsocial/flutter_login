@@ -1,12 +1,12 @@
-part of auth_card_builder;
+part of 'auth_card_builder.dart';
 
 class _ConfirmRecoverCard extends StatefulWidget {
   const _ConfirmRecoverCard({
-    Key? key,
+    super.key,
     required this.passwordValidator,
     required this.onBack,
     required this.onSubmitCompleted,
-  }) : super(key: key);
+  });
 
   final FormFieldValidator<String> passwordValidator;
   final VoidCallback onBack;
@@ -46,7 +46,7 @@ class _ConfirmRecoverCardState extends State<_ConfirmRecoverCard>
   }
 
   Future<bool> _submit() async {
-    FocusScope.of(context).requestFocus(FocusNode()); // close keyboard
+    FocusScope.of(context).unfocus(); // close keyboard
 
     if (!_formRecoverKey.currentState!.validate()) {
       return false;
@@ -72,8 +72,11 @@ class _ConfirmRecoverCardState extends State<_ConfirmRecoverCard>
       await _submitController.reverse();
       return false;
     } else {
-      showSuccessToast(context, messages.flushbarTitleSuccess,
-          messages.confirmRecoverSuccess);
+      showSuccessToast(
+        context,
+        messages.flushbarTitleSuccess,
+        messages.confirmRecoverSuccess,
+      );
       setState(() => _isSubmitting = false);
       widget.onSubmitCompleted();
       return true;
@@ -84,7 +87,7 @@ class _ConfirmRecoverCardState extends State<_ConfirmRecoverCard>
     return AnimatedTextFormField(
       width: width,
       labelText: messages.recoveryCodeHint,
-      prefixIcon: const Icon(FontAwesomeIcons.solidCheckCircle),
+      prefixIcon: const Icon(FontAwesomeIcons.solidCircleCheck),
       textInputAction: TextInputAction.next,
       onFieldSubmitted: (value) {
         FocusScope.of(context).requestFocus(_passwordFocusNode);
@@ -178,7 +181,7 @@ class _ConfirmRecoverCardState extends State<_ConfirmRecoverCard>
                 Text(
                   messages.confirmRecoverIntro,
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyText2,
+                  style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 20),
                 _buildVerificationCodeField(textFieldWidth, messages),

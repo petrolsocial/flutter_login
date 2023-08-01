@@ -1,3 +1,53 @@
+## 4.2.0
+Features:
+- Added validateUserImmediately property. Should email be validated after losing focus [true] or after form submissions. 
+- Added confirmSignupRequired property. Additional option to decide in runtime if confirmation is required. 
+- Added UserFormField tooltip. 
+- Added LoginUserType Firstname, Lastname, Text, Intlphone and checkbox.
+
+Bugs fixed:
+- Fix autofill 
+- Fixed dispose() method must be called before super.dispose() 
+- Fixed providerNeedsSignUpCallback not being called. 
+- Provider Sign-up now also executes beforeAdditionalFieldsCallback() 
+- LoginUserType.phone now returns TextInputType.number
+- Scrollbar not attached to scroll controller
+
+## 4.1.1
+Bugs fixed:
+- Fixed an issue with keyboard unfocusing. (Thanks @otto-dev !)
+- Fixed an issue with checkboxFormField not updating value. (Thanks @Mojo1917 !)
+- Updated dependencies.
+
+## 4.1.0
+Features:
+* You can now select the keyboardType for the confirm Signup Code with [confirmSignupKeyboardType]. (Thanks @0ttik !)
+* Added a [headerWidget] that can be used to provide some text above the loginCard. (Thanks @cloudonlanapps !)
+* You can now perform checks between switching to additionalData (if provided) using [onSwitchToAdditionalFields] (Thanks @blanquartf !)
+
+Bugs fixed:
+* Fixed termOfService.linkUrl. (Thanks @fotiDim !)
+
+Other improvements:
+* Migrated to lint and applied all suggested lints.
+* Updated dependencies.
+
+## 4.0.0
+BREAKING CHANGES:
+Flutter 3 or higher is required. All other dependencies are updated to match this.
+
+## 4.0.0-beta.1
+BREAKING CHANGES:
+* Upgraded font_awesome_flutter from v9 to v10
+* Changed from flutter_signin_button to sign_in_button. This changes the enum names.
+
+## 3.2.0
+Features:
+* It is now possible to enable scrolling instead of resizing the login card. You can enable this by setting the `scrollable` parameter to true.
+* The prefix icon of the user/email field now changes depending on the type.
+* Custom sign-in buttons using [flutter_signin_button](https://pub.dev/packages/flutter_signin_button) package is now integrated. See the example app for an example.
+* Add an animation to the termsOfService buttons.
+
 ## 3.1.0
 Features:
 * Add children parameter to FlutterLogin which takes a list of widgets that can be added in the

@@ -1,10 +1,11 @@
-part of auth_card_builder;
+part of 'auth_card_builder.dart';
 
 class _LoginCard extends StatefulWidget {
   const _LoginCard({
-    Key? key,
+    super.key,
     required this.loadingController,
     required this.userValidator,
+    required this.validateUserImmediately,
     required this.passwordValidator,
     required this.onSwitchRecoveryPassword,
     required this.onSwitchSignUpAdditionalData,
@@ -12,23 +13,23 @@ class _LoginCard extends StatefulWidget {
     required this.requireAdditionalSignUpFields,
     required this.onSwitchConfirmSignup,
     required this.requireSignUpConfirmation,
-    this.onSwitchAuth,
     this.onSubmitCompleted,
     this.hideForgotPasswordButton = false,
     this.hideSignUpButton = false,
     this.enableAnonAuth = false,
     this.loginAfterSignUp = true,
     this.hideProvidersTitle = false,
-  }) : super(key: key);
+    this.introWidget,
+  });
 
   final AnimationController loadingController;
   final FormFieldValidator<String>? userValidator;
+  final bool? validateUserImmediately;
   final FormFieldValidator<String>? passwordValidator;
-  final Function onSwitchRecoveryPassword;
-  final Function onSwitchSignUpAdditionalData;
-  final Function onSwitchConfirmSignup;
-  final Function? onSwitchAuth;
-  final Function? onSubmitCompleted;
+  final VoidCallback onSwitchRecoveryPassword;
+  final VoidCallback onSwitchSignUpAdditionalData;
+  final VoidCallback onSwitchConfirmSignup;
+  final VoidCallback? onSubmitCompleted;
   final bool hideForgotPasswordButton;
   final bool hideSignUpButton;
   final bool enableAnonAuth;
@@ -36,7 +37,8 @@ class _LoginCard extends StatefulWidget {
   final bool hideProvidersTitle;
   final LoginUserType userType;
   final bool requireAdditionalSignUpFields;
-  final bool requireSignUpConfirmation;
+  final Future<bool> Function() requireSignUpConfirmation;
+  final Widget? introWidget;
 
   @override
   _LoginCardState createState() => _LoginCardState();
@@ -45,6 +47,8 @@ class _LoginCard extends StatefulWidget {
 class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey();
 
+  final _userFieldKey = GlobalKey<FormFieldState>();
+  final _userFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
   final _confirmPasswordFocusNode = FocusNode();
 
@@ -107,11 +111,19 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     _passTextFieldLoadingAnimationInterval = const Interval(.15, 1.0);
     _textButtonLoadingAnimationInterval =
         const Interval(.6, 1.0, curve: Curves.easeOut);
-    _buttonScaleAnimation =
-        Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-      parent: widget.loadingController,
-      curve: const Interval(.4, 1.0, curve: Curves.easeOutBack),
-    ));
+    _buttonScaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: widget.loadingController,
+        curve: const Interval(.4, 1.0, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _userFocusNode.addListener(() {
+      if (!_userFocusNode.hasFocus &&
+          (widget.validateUserImmediately ?? false)) {
+        _userFieldKey.currentState?.validate();
+      }
+    });
   }
 
   void handleLoadingAnimationStatus(AnimationStatus status) {
@@ -126,6 +138,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
   @override
   void dispose() {
     widget.loadingController.removeStatusListener(handleLoadingAnimationStatus);
+    _userFocusNode.dispose();
     _passwordFocusNode.dispose();
     _confirmPasswordFocusNode.dispose();
 
@@ -133,7 +146,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     _postSwitchAuthController.dispose();
     _submitController.dispose();
 
-    for (var controller in _providerControllerList) {
+    for (final controller in _providerControllerList) {
       controller.dispose();
     }
     super.dispose();
@@ -150,11 +163,8 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     }
   }
 
-  Future<bool> _submit(bool isAnonymous) async {
-    // a hack to force unfocus the soft keyboard. If not, after change-route
-    // animation completes, it will trigger rebuilding this widget and show all
-    // textfields and buttons again before going to new route
-    FocusScope.of(context).requestFocus(FocusNode());
+  Future<bool> _submit() async {
+    FocusScope.of(context).unfocus(); //removed unfocus hack, test
 
     final messages = Provider.of<LoginMessages>(context, listen: false);
 
@@ -174,19 +184,34 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       auth.mode = AuthMode.signup;
     }
 
-    if (!isAnonymous && auth.isLogin) {
-      error = await auth.onLogin?.call(LoginData(
-        name: auth.email,
-        password: auth.password,
-        isAnonymous: isAnonymous,
-      ));
+    if (auth.isLogin) {
+      error = await auth.onLogin?.call(
+        LoginData(
+          name: auth.email,
+          password: auth.password,
+        ),
+      );
     } else {
       if (!widget.requireAdditionalSignUpFields) {
-        error = await auth.onSignup!(SignupData.fromSignupForm(
+        error = await auth.onSignup!(
+          SignupData.fromSignupForm(
             name: auth.email,
             password: auth.password,
             isAnonymous: auth.isAnonymous,
-            termsOfService: auth.getTermsOfServiceResults()));
+            termsOfService: auth.getTermsOfServiceResults(),
+          ),
+        );
+      } else {
+        if (auth.beforeAdditionalFieldsCallback != null) {
+          error = await auth.beforeAdditionalFieldsCallback!(
+            SignupData.fromSignupForm(
+              name: auth.email,
+              password: auth.password,
+              isAnonymous: auth.isAnonymous,
+              termsOfService: auth.getTermsOfServiceResults(),
+            ),
+          );
+        }
       }
     }
 
@@ -212,32 +237,51 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     }
 
     if (auth.isSignup) {
+      final requireSignUpConfirmation =
+          await widget.requireSignUpConfirmation();
       if (widget.requireAdditionalSignUpFields) {
         widget.onSwitchSignUpAdditionalData();
         // The login page wil be shown in login mode (used if loginAfterSignUp disabled)
         _switchAuthMode();
         return false;
-      } else if (widget.requireSignUpConfirmation) {
+      } else if (requireSignUpConfirmation) {
         widget.onSwitchConfirmSignup();
         _switchAuthMode();
         return false;
       } else if (!widget.loginAfterSignUp) {
         showSuccessToast(
-            context, messages.flushbarTitleSuccess, messages.signUpSuccess);
+          context,
+          messages.flushbarTitleSuccess,
+          messages.signUpSuccess,
+        );
         _switchAuthMode();
         setState(() => _isSubmitting = false);
         return false;
       }
     }
-
+    TextInput.finishAutofillContext();
     widget.onSubmitCompleted?.call();
 
     return true;
   }
 
-  Future<bool> _loginProviderSubmit(
-      {required LoginProvider loginProvider,
-      AnimationController? control}) async {
+  Future<bool> _loginProviderSubmit({
+    required LoginProvider loginProvider,
+    AnimationController? control,
+  }) async {
+    if (!loginProvider.animated) {
+      final String? error = await loginProvider.callback();
+
+      final messages = Provider.of<LoginMessages>(context, listen: false);
+
+      if (!DartHelper.isNullOrEmpty(error)) {
+        showErrorToast(context, messages.flushbarTitleError, error!);
+        return false;
+      }
+
+      return true;
+    }
+
     await control?.forward();
 
     final auth = Provider.of<Auth>(context, listen: false);
@@ -246,7 +290,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
 
     String? error;
 
-    error = await loginProvider.callback!();
+    error = await loginProvider.callback();
 
     // workaround to run after _cardSizeAnimation in parent finished
     // need a cleaner way but currently it works so..
@@ -256,12 +300,11 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       }
     });
 
-    await control?.reverse();
-
     final messages = Provider.of<LoginMessages>(context, listen: false);
 
     if (!DartHelper.isNullOrEmpty(error)) {
       if (error != 'skip') {
+        await control?.reverse();
         showErrorToast(context, messages.flushbarTitleError, error!);
         Future.delayed(const Duration(milliseconds: 271), () {
           if (mounted) {
@@ -269,7 +312,6 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
           }
         });
       }
-
       return false;
     }
 
@@ -277,11 +319,32 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
         await loginProvider.providerNeedsSignUpCallback?.call() ?? false;
 
     if (showSignupAdditionalFields) {
+      if (auth.beforeAdditionalFieldsCallback != null) {
+        error = await auth.beforeAdditionalFieldsCallback!(
+          SignupData.fromSignupForm(
+            name: auth.email,
+            password: auth.password,
+            termsOfService: auth.getTermsOfServiceResults(),
+            additionalSignupData: auth.additionalSignupData,
+          ),
+        );
+        await control?.reverse();
+        if (!DartHelper.isNullOrEmpty(error)) {
+          showErrorToast(context, messages.flushbarTitleError, error!);
+          Future.delayed(const Duration(milliseconds: 271), () {
+            if (mounted) {
+              setState(() => _showShadow = true);
+            }
+          });
+          return false;
+        }
+      }
+      await control?.reverse();
       widget.onSwitchSignUpAdditionalData();
+    } else {
+      widget.onSubmitCompleted!();
     }
-
-    widget.onSubmitCompleted!();
-
+    await control?.reverse();
     return true;
   }
 
@@ -291,17 +354,21 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     Auth auth,
   ) {
     return AnimatedTextFormField(
+      textFormFieldKey: _userFieldKey,
+      userType: widget.userType,
       controller: _nameController,
       width: width,
       loadingController: widget.loadingController,
       interval: _nameTextFieldLoadingAnimationInterval,
-      labelText: messages.userHint,
+      labelText:
+          messages.userHint ?? TextFieldUtils.getLabelText(widget.userType),
       autofillHints: _isSubmitting
           ? null
           : [TextFieldUtils.getAutofillHints(widget.userType)],
-      prefixIcon: const Icon(FontAwesomeIcons.solidUserCircle),
+      prefixIcon: TextFieldUtils.getPrefixIcon(widget.userType),
       keyboardType: TextFieldUtils.getKeyboardType(widget.userType),
       textInputAction: TextInputAction.next,
+      focusNode: _userFocusNode,
       onFieldSubmitted: (value) {
         FocusScope.of(context).requestFocus(_passwordFocusNode);
       },
@@ -341,7 +408,10 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
   }
 
   Widget _buildConfirmPasswordField(
-      double width, LoginMessages messages, Auth auth) {
+    double width,
+    LoginMessages messages,
+    Auth auth,
+  ) {
     return AnimatedPasswordTextFormField(
       animatedWidth: width,
       enabled: auth.isSignup,
@@ -381,7 +451,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
             : null,
         child: Text(
           messages.forgotPasswordButton,
-          style: theme.textTheme.bodyText2,
+          style: theme.textTheme.bodyMedium,
           textAlign: TextAlign.left,
         ),
       ),
@@ -389,7 +459,10 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
   }
 
   Widget _buildSubmitButton(
-      ThemeData theme, LoginMessages messages, Auth auth) {
+    ThemeData theme,
+    LoginMessages messages,
+    Auth auth,
+  ) {
     return ScaleTransition(
       scale: _buttonScaleAnimation,
       child: AnimatedButton(
@@ -400,8 +473,12 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildSwitchAuthButton(ThemeData theme, LoginMessages messages,
-      Auth auth, LoginTheme loginTheme) {
+  Widget _buildSwitchAuthButton(
+    ThemeData theme,
+    LoginMessages messages,
+    Auth auth,
+    LoginTheme loginTheme,
+  ) {
     final calculatedTextColor =
         (theme.cardTheme.color!.computeLuminance() < 0.5)
             ? Colors.white
@@ -480,34 +557,49 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
   //       }).toList());
   // }
 
-  Widget _buildProvidersLogInButton(ThemeData theme, LoginMessages messages,
-      Auth auth, LoginTheme loginTheme) {
-    var buttonProvidersList = <LoginProvider>[];
-    var iconProvidersList = <LoginProvider>[];
-    for (var loginProvider in auth.loginProviders) {
+  Widget _buildProvidersLogInButton(
+    ThemeData theme,
+    LoginMessages messages,
+    Auth auth,
+    LoginTheme loginTheme,
+  ) {
+    final buttonProvidersList = <LoginProvider>[];
+    final iconProvidersList = <LoginProvider>[];
+    for (final loginProvider in auth.loginProviders) {
       if (loginProvider.button != null) {
-        buttonProvidersList.add(LoginProvider(
-          icon: loginProvider.icon,
-          label: loginProvider.label,
-          button: loginProvider.button,
-          callback: loginProvider.callback,
-        ));
+        buttonProvidersList.add(
+          LoginProvider(
+            icon: loginProvider.icon,
+            label: loginProvider.label,
+            button: loginProvider.button,
+            callback: loginProvider.callback,
+            animated: loginProvider.animated,
+            providerNeedsSignUpCallback:
+                loginProvider.providerNeedsSignUpCallback,
+          ),
+        );
       } else if (loginProvider.icon != null) {
-        iconProvidersList.add(LoginProvider(
-          icon: loginProvider.icon,
-          label: loginProvider.label,
-          button: loginProvider.button,
-          callback: loginProvider.callback,
-        ));
+        iconProvidersList.add(
+          LoginProvider(
+            icon: loginProvider.icon,
+            label: loginProvider.label,
+            button: loginProvider.button,
+            callback: loginProvider.callback,
+            animated: loginProvider.animated,
+            providerNeedsSignUpCallback:
+                loginProvider.providerNeedsSignUpCallback,
+          ),
+        );
       }
     }
     if (buttonProvidersList.isNotEmpty) {
       return Column(
         children: [
           _buildButtonColumn(theme, messages, buttonProvidersList, loginTheme),
-          iconProvidersList.isNotEmpty
-              ? _buildProvidersTitleSecond(messages)
-              : Container(),
+          if (iconProvidersList.isNotEmpty)
+            _buildProvidersTitleSecond(messages)
+          else
+            Container(),
           _buildIconRow(theme, messages, iconProvidersList, loginTheme),
         ],
       );
@@ -517,8 +609,12 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     return Container();
   }
 
-  Widget _buildButtonColumn(ThemeData theme, LoginMessages messages,
-      List<LoginProvider> buttonProvidersList, LoginTheme loginTheme) {
+  Widget _buildButtonColumn(
+    ThemeData theme,
+    LoginMessages messages,
+    List<LoginProvider> buttonProvidersList,
+    LoginTheme loginTheme,
+  ) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: buttonProvidersList.map((loginProvider) {
@@ -541,30 +637,36 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildIconRow(ThemeData theme, LoginMessages messages,
-      List<LoginProvider> iconProvidersList, LoginTheme loginTheme) {
+  Widget _buildIconRow(
+    ThemeData theme,
+    LoginMessages messages,
+    List<LoginProvider> iconProvidersList,
+    LoginTheme loginTheme,
+  ) {
     return Wrap(
       children: iconProvidersList.map((loginProvider) {
-        var index = iconProvidersList.indexOf(loginProvider);
+        final index = iconProvidersList.indexOf(loginProvider);
         return Padding(
           padding: loginTheme.providerButtonPadding ??
               const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
           child: ScaleTransition(
-              scale: _buttonScaleAnimation,
-              child: Column(
-                children: [
-                  AnimatedIconButton(
-                    icon: loginProvider.icon!,
-                    controller: _providerControllerList[index],
-                    tooltip: loginProvider.label,
-                    onPressed: () => _loginProviderSubmit(
-                      control: _providerControllerList[index],
-                      loginProvider: loginProvider,
-                    ),
+            scale: _buttonScaleAnimation,
+            child: Column(
+              children: [
+                AnimatedIconButton(
+                  color: Colors.transparent,
+                  icon: loginProvider.icon!,
+                  controller: _providerControllerList[index],
+                  tooltip: loginProvider.label,
+                  onPressed: () => _loginProviderSubmit(
+                    control: _providerControllerList[index],
+                    loginProvider: loginProvider,
                   ),
-                  Text(loginProvider.label)
-                ],
-              )),
+                ),
+                Text(loginProvider.label)
+              ],
+            ),
+          ),
         );
       }).toList(),
     );
@@ -572,33 +674,39 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
 
   Widget _buildProvidersTitleFirst(LoginMessages messages) {
     return ScaleTransition(
-        scale: _buttonScaleAnimation,
-        child: Row(children: <Widget>[
+      scale: _buttonScaleAnimation,
+      child: Row(
+        children: <Widget>[
           const Expanded(child: Divider()),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(messages.providersTitleFirst),
           ),
           const Expanded(child: Divider()),
-        ]));
+        ],
+      ),
+    );
   }
 
   Widget _buildProvidersTitleSecond(LoginMessages messages) {
     return ScaleTransition(
-        scale: _buttonScaleAnimation,
-        child: Row(children: <Widget>[
+      scale: _buttonScaleAnimation,
+      child: Row(
+        children: <Widget>[
           const Expanded(child: Divider()),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(messages.providersTitleSecond),
           ),
           const Expanded(child: Divider()),
-        ]));
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<Auth>(context, listen: true);
+    final auth = Provider.of<Auth>(context);
     final isLogin = auth.isLogin;
     final messages = Provider.of<LoginMessages>(context, listen: false);
     final loginTheme = Provider.of<LoginTheme>(context, listen: false);
@@ -685,7 +793,18 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
                 _buildPasswordField(textFieldWidth, messages, auth),
                 const SizedBox(height: 10),
               ],
-            ),
+            // child: AutofillGroup(  //From merge, test
+            //   child: Column(
+            //     crossAxisAlignment: CrossAxisAlignment.start,
+            //     children: <Widget>[
+            //       if (widget.introWidget != null) widget.introWidget!,
+            //       _buildUserField(textFieldWidth, messages, auth),
+            //       const SizedBox(height: 20),
+            //       _buildPasswordField(textFieldWidth, messages, auth),
+            //       const SizedBox(height: 10),
+            //     ],
+            //   ),
+            // ),
           ),
           ExpandableContainer(
             backgroundColor: _switchAuthController.isCompleted
@@ -698,41 +817,49 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
             alignment: Alignment.topLeft,
             color: theme.cardTheme.color,
             width: cardWidth,
-            padding: const EdgeInsets.symmetric(
-              horizontal: cardPadding,
-              vertical: 10,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: cardPadding),
             onExpandCompleted: () => _postSwitchAuthController.forward(),
-            child: _buildConfirmPasswordField(textFieldWidth, messages, auth),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  child: _buildConfirmPasswordField(
+                    textFieldWidth,
+                    messages,
+                    auth,
+                  ),
+                ),
+                for (var e in auth.termsOfService)
+                  TermCheckbox(
+                    termOfService: e,
+                    validation: auth.isSignup,
+                  ),
+              ],
+            ),
           ),
           Container(
             padding: Paddings.fromRBL(cardPadding),
             width: cardWidth,
             child: Column(
               children: <Widget>[
-                if (auth.isSignup && auth.termsOfService.isNotEmpty)
-                  ...auth.termsOfService
-                      .map((e) => ScaleTransition(
-                            scale: _buttonScaleAnimation,
-                            child: TermCheckbox(
-                              termOfService: e,
-                            ),
-                          ))
-                      .toList(),
-                !widget.hideForgotPasswordButton
-                    ? _buildForgotPassword(theme, messages)
-                    : SizedBox.fromSize(
-                        size: const Size.fromHeight(16),
-                      ),
+                if (!widget.hideForgotPasswordButton)
+                  _buildForgotPassword(theme, messages)
+                else
+                  SizedBox.fromSize(
+                    size: const Size.fromHeight(16),
+                  ),
                 _buildSubmitButton(theme, messages, auth),
-                !widget.hideSignUpButton
-                    ? _buildSwitchAuthButton(theme, messages, auth, loginTheme)
-                    : SizedBox.fromSize(
-                        size: const Size.fromHeight(10),
-                      ),
-                auth.loginProviders.isNotEmpty && !widget.hideProvidersTitle
-                    ? _buildProvidersTitleFirst(messages)
-                    : Container(),
+                if (!widget.hideSignUpButton)
+                  _buildSwitchAuthButton(theme, messages, auth, loginTheme)
+                else
+                  SizedBox.fromSize(
+                    size: const Size.fromHeight(10),
+                  ),
+                if (auth.loginProviders.isNotEmpty &&
+                    !widget.hideProvidersTitle)
+                  _buildProvidersTitleFirst(messages)
+                else
+                  Container(),
                 _buildProvidersLogInButton(theme, messages, auth, loginTheme),
                 if (widget.enableAnonAuth)
                   _buildAnonAuthButton(theme, messages, auth),

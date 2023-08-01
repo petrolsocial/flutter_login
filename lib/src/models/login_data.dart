@@ -10,7 +10,7 @@ class LoginData {
 
   @override
   String toString() {
-    return '$runtimeType($name, $password)';
+    return 'LoginData($name, $password)';
   }
 
   @override

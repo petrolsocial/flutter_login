@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_login/src/models/phone_login_data.dart';
 
-import '../../flutter_login.dart';
+import 'package:flutter_login/flutter_login.dart';
 
 enum AuthMode { signup, login }
 
@@ -22,7 +22,12 @@ typedef SignupCallback = Future<String?>? Function(SignupData);
 /// The additional fields are provided as an `HashMap<String, String>`
 /// The result is an error message, callback successes if message is null
 typedef AdditionalFieldsCallback = Future<String?>? Function(
-    Map<String, String>);
+  Map<String, String>,
+);
+
+/// A callback which can be used to check data before switching
+/// The result is an error message, callback successes if message is null
+typedef BeforeAdditionalFieldsCallback = Future<String?>? Function(SignupData);
 
 /// If the callback returns true, the additional data card is shown
 typedef ProviderNeedsSignUpCallback = Future<bool> Function();
@@ -31,10 +36,15 @@ typedef ProviderNeedsSignUpCallback = Future<bool> Function();
 typedef ProviderAuthCallback = Future<String?>? Function();
 
 /// The result is an error message, callback successes if message is null
+typedef ProviderDirectCallback = Future? Function();
+
+/// The result is an error message, callback successes if message is null
 typedef RecoverCallback = Future<String?>? Function(String);
 
 /// The result is an error message, callback successes if message is null
 typedef ConfirmSignupCallback = Future<String?>? Function(String, LoginData);
+
+typedef ConfirmSignupRequiredCallback = Future<bool> Function(LoginData);
 
 /// The result is an error message, callback successes if message is null
 typedef ConfirmRecoverCallback = Future<String?>? Function(String, LoginData);
@@ -51,6 +61,7 @@ class Auth with ChangeNotifier {
       this.onConfirmRecover,
       this.onConfirmSignup,
       this.onResendCode,
+      this.beforeAdditionalFieldsCallback,
       String email = '',
       String password = '',
       String confirmPassword = '',
@@ -69,10 +80,12 @@ class Auth with ChangeNotifier {
   final List<LoginProvider> loginProviders;
   final ConfirmRecoverCallback? onConfirmRecover;
   final ConfirmSignupCallback? onConfirmSignup;
+  final ConfirmSignupRequiredCallback? confirmSignupRequired;
   final SignupCallback? onResendCode;
   final List<TermOfService> termsOfService;
   final ValueNotifier<bool>? phoneLoginOtpSentNotifier;
   final ValueNotifier<String?>? phoneLoginVerificationStatusNotifier;
+  final BeforeAdditionalFieldsCallback? beforeAdditionalFieldsCallback;
 
   AuthType _authType = AuthType.userPassword;
   bool isAnonymous = false;
@@ -145,7 +158,7 @@ class Auth with ChangeNotifier {
 
   List<TermOfServiceResult> getTermsOfServiceResults() {
     return termsOfService
-        .map((e) => TermOfServiceResult(term: e, accepted: e.getStatus()))
+        .map((e) => TermOfServiceResult(term: e, accepted: e.checked))
         .toList();
   }
 }

@@ -19,16 +19,22 @@ class UserFormField {
   /// The icon shown on the left of the field. Defaults to the user icon
   final Icon? icon;
 
+  final String? linkUrl;
+
   /// The LoginUserType of the form. The right keyboard and suggestions will be shown accordingly
   /// Defaults to LoginUserType.user
   final LoginUserType userType;
 
+  final InlineSpan? tooltip;
+
   const UserFormField({
     required this.keyName,
-    displayName,
+    String? displayName,
     this.defaultValue = '',
+    this.linkUrl,
     this.icon,
     this.fieldValidator,
     this.userType = LoginUserType.name,
+    this.tooltip,
   }) : displayName = displayName ?? keyName;
 }

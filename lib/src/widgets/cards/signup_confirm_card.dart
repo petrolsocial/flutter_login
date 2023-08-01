@@ -1,18 +1,20 @@
-part of auth_card_builder;
+part of 'auth_card_builder.dart';
 
 class _ConfirmSignupCard extends StatefulWidget {
   const _ConfirmSignupCard({
-    Key? key,
+    super.key,
     required this.onBack,
     required this.onSubmitCompleted,
     this.loginAfterSignUp = true,
     required this.loadingController,
-  }) : super(key: key);
+    required this.keyboardType,
+  });
 
   final bool loginAfterSignUp;
   final VoidCallback onBack;
   final VoidCallback onSubmitCompleted;
   final AnimationController loadingController;
+  final TextInputType? keyboardType;
 
   @override
   _ConfirmSignupCardState createState() => _ConfirmSignupCardState();
@@ -40,12 +42,12 @@ class _ConfirmSignupCardState extends State<_ConfirmSignupCard>
 
   @override
   void dispose() {
-    super.dispose();
     _fieldSubmitController.dispose();
+    super.dispose();
   }
 
   Future<bool> _submit() async {
-    FocusScope.of(context).requestFocus(FocusNode());
+    FocusScope.of(context).unfocus();
 
     if (!_formRecoverKey.currentState!.validate()) {
       return false;
@@ -61,7 +63,7 @@ class _ConfirmSignupCardState extends State<_ConfirmSignupCard>
         LoginData(
           name: auth.email,
           password: auth.password,
-          isAnonymous: auth.isAnonymous,
+          isAnonymous: auth.isAnonymous, //Removed in merge, test
         ));
 
     if (error != null) {
@@ -72,7 +74,10 @@ class _ConfirmSignupCardState extends State<_ConfirmSignupCard>
     }
 
     showSuccessToast(
-        context, messages.flushbarTitleSuccess, messages.confirmSignupSuccess);
+      context,
+      messages.flushbarTitleSuccess,
+      messages.confirmSignupSuccess,
+    );
     setState(() => _isSubmitting = false);
     await _fieldSubmitController.reverse();
 
@@ -87,17 +92,18 @@ class _ConfirmSignupCardState extends State<_ConfirmSignupCard>
   }
 
   Future<bool> _resendCode() async {
-    FocusScope.of(context).requestFocus(FocusNode());
+    FocusScope.of(context).unfocus();
 
     final auth = Provider.of<Auth>(context, listen: false);
     final messages = Provider.of<LoginMessages>(context, listen: false);
 
     await _fieldSubmitController.forward();
     setState(() => _isSubmitting = true);
-    final error = await auth.onResendCode!(SignupData.fromSignupForm(
+    final error = await auth.onResendCode!(
+      SignupData.fromSignupForm(
         name: auth.email,
         password: auth.password,
-        isAnonymous: auth.isAnonymous,
+        isAnonymous: auth.isAnonymous,  //Modified in merge, test
         termsOfService: auth.getTermsOfServiceResults()));
 
     if (error != null) {
@@ -108,7 +114,10 @@ class _ConfirmSignupCardState extends State<_ConfirmSignupCard>
     }
 
     showSuccessToast(
-        context, messages.flushbarTitleSuccess, messages.resendCodeSuccess);
+      context,
+      messages.flushbarTitleSuccess,
+      messages.resendCodeSuccess,
+    );
     setState(() => _isSubmitting = false);
     await _fieldSubmitController.reverse();
     return true;
@@ -119,7 +128,7 @@ class _ConfirmSignupCardState extends State<_ConfirmSignupCard>
       loadingController: widget.loadingController,
       width: width,
       labelText: messages.confirmationCodeHint,
-      prefixIcon: const Icon(FontAwesomeIcons.solidCheckCircle),
+      prefixIcon: const Icon(FontAwesomeIcons.solidCircleCheck),
       textInputAction: TextInputAction.done,
       onFieldSubmitted: (value) => _submit(),
       validator: (value) {
@@ -129,6 +138,7 @@ class _ConfirmSignupCardState extends State<_ConfirmSignupCard>
         return null;
       },
       onSaved: (value) => _code = value!,
+      keyboardType: widget.keyboardType,
     );
   }
 
@@ -139,7 +149,7 @@ class _ConfirmSignupCardState extends State<_ConfirmSignupCard>
         onPressed: !_isSubmitting ? _resendCode : null,
         child: Text(
           messages.resendCodeButton,
-          style: theme.textTheme.bodyText2,
+          style: theme.textTheme.bodyMedium,
           textAlign: TextAlign.left,
         ),
       ),
@@ -199,7 +209,7 @@ class _ConfirmSignupCardState extends State<_ConfirmSignupCard>
                   child: Text(
                     messages.confirmSignupIntro,
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyText2,
+                    style: theme.textTheme.bodyMedium,
                   ),
                 ),
                 const SizedBox(height: 20),

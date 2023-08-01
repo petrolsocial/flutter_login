@@ -2,7 +2,12 @@ import 'dart:math';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_login/flutter_login.dart';
+import 'package:flutter_login/src/widgets/term_of_service_checkbox.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl_phone_number_input/intl_phone_number_input.dart';
+import 'package:phone_numbers_parser/phone_numbers_parser.dart' as pnp;
+import 'package:url_launcher/url_launcher.dart';
 
 enum TextFieldInertiaDirection {
   left,
@@ -25,14 +30,17 @@ Interval _getInternalInterval(
 
 class AnimatedTextFormField extends StatefulWidget {
   const AnimatedTextFormField({
-    Key? key,
+    super.key,
+    this.textFormFieldKey,
     this.interval = const Interval(0.0, 1.0),
     required this.width,
+    this.userType,
     this.loadingController,
     this.inertiaController,
     this.inertiaDirection,
     this.enabled = true,
     this.labelText,
+    this.linkUrl,
     this.prefixIcon,
     this.suffixIcon,
     this.keyboardType,
@@ -45,18 +53,23 @@ class AnimatedTextFormField extends StatefulWidget {
     this.onSaved,
     this.autocorrect = false,
     this.autofillHints,
-  })  : assert((inertiaController == null && inertiaDirection == null) ||
-            (inertiaController != null && inertiaDirection != null)),
-        super(key: key);
+    this.tooltip,
+  }) : assert(
+          (inertiaController == null && inertiaDirection == null) ||
+              (inertiaController != null && inertiaDirection != null),
+        );
 
+  final Key? textFormFieldKey;
   final Interval? interval;
   final AnimationController? loadingController;
   final AnimationController? inertiaController;
   final double width;
+  final LoginUserType? userType;
   final bool enabled;
   final bool autocorrect;
   final Iterable<String>? autofillHints;
   final String? labelText;
+  final String? linkUrl;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final TextInputType? keyboardType;
@@ -68,9 +81,10 @@ class AnimatedTextFormField extends StatefulWidget {
   final ValueChanged<String>? onFieldSubmitted;
   final FormFieldSetter<String>? onSaved;
   final TextFieldInertiaDirection? inertiaDirection;
+  final InlineSpan? tooltip;
 
   @override
-  _AnimatedTextFormFieldState createState() => _AnimatedTextFormFieldState();
+  State<AnimatedTextFormField> createState() => _AnimatedTextFormFieldState();
 }
 
 class _AnimatedTextFormFieldState extends State<AnimatedTextFormField> {
@@ -81,6 +95,9 @@ class _AnimatedTextFormFieldState extends State<AnimatedTextFormField> {
   late Animation<double> fieldTranslateAnimation;
   late Animation<double> iconRotationAnimation;
   late Animation<double> iconTranslateAnimation;
+
+  PhoneNumber? _phoneNumberInitialValue;
+  final TextEditingController _phoneNumberController = TextEditingController();
 
   @override
   void initState() {
@@ -95,16 +112,24 @@ class _AnimatedTextFormFieldState extends State<AnimatedTextFormField> {
       scaleAnimation = Tween<double>(
         begin: 0.0,
         end: 1.0,
-      ).animate(CurvedAnimation(
-        parent: loadingController,
-        curve: _getInternalInterval(
-            0, .2, interval!.begin, interval.end, Curves.easeOutBack),
-      ));
-      suffixIconOpacityAnimation =
-          Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-        parent: loadingController,
-        curve: _getInternalInterval(.65, 1.0, interval.begin, interval.end),
-      ));
+      ).animate(
+        CurvedAnimation(
+          parent: loadingController,
+          curve: _getInternalInterval(
+            0,
+            .2,
+            interval!.begin,
+            interval.end,
+            Curves.easeOutBack,
+          ),
+        ),
+      );
+      suffixIconOpacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: loadingController,
+          curve: _getInternalInterval(.65, 1.0, interval.begin, interval.end),
+        ),
+      );
       _updateSizeAnimation();
     }
 
@@ -116,24 +141,48 @@ class _AnimatedTextFormFieldState extends State<AnimatedTextFormField> {
       fieldTranslateAnimation = Tween<double>(
         begin: 0.0,
         end: sign * 15.0,
-      ).animate(CurvedAnimation(
-        parent: inertiaController,
-        curve: const Interval(0, .5, curve: Curves.easeOut),
-        reverseCurve: Curves.easeIn,
-      ));
+      ).animate(
+        CurvedAnimation(
+          parent: inertiaController,
+          curve: const Interval(0, .5, curve: Curves.easeOut),
+          reverseCurve: Curves.easeIn,
+        ),
+      );
       iconRotationAnimation =
-          Tween<double>(begin: 0.0, end: sign * pi / 12 /* ~15deg */)
-              .animate(CurvedAnimation(
-        parent: inertiaController,
-        curve: const Interval(.5, 1.0, curve: Curves.easeOut),
-        reverseCurve: Curves.easeIn,
-      ));
-      iconTranslateAnimation =
-          Tween<double>(begin: 0.0, end: 8.0).animate(CurvedAnimation(
-        parent: inertiaController,
-        curve: const Interval(.5, 1.0, curve: Curves.easeOut),
-        reverseCurve: Curves.easeIn,
-      ));
+          Tween<double>(begin: 0.0, end: sign * pi / 12 /* ~15deg */).animate(
+        CurvedAnimation(
+          parent: inertiaController,
+          curve: const Interval(.5, 1.0, curve: Curves.easeOut),
+          reverseCurve: Curves.easeIn,
+        ),
+      );
+      iconTranslateAnimation = Tween<double>(begin: 0.0, end: 8.0).animate(
+        CurvedAnimation(
+          parent: inertiaController,
+          curve: const Interval(.5, 1.0, curve: Curves.easeOut),
+          reverseCurve: Curves.easeIn,
+        ),
+      );
+    }
+
+    if (widget.userType == LoginUserType.intlPhone) {
+      _phoneNumberInitialValue = PhoneNumber(isoCode: 'US', dialCode: '+1');
+      if (widget.controller?.value.text != null) {
+        try {
+          final parsed = pnp.PhoneNumber.parse(widget.controller!.value.text);
+          if (parsed.isValid()) {
+            _phoneNumberInitialValue = PhoneNumber(
+              phoneNumber: parsed.nsn,
+              isoCode: parsed.isoCode.name,
+              dialCode: parsed.countryCode,
+            );
+          }
+        } on pnp.PhoneNumberException {
+          // ignore
+        } finally {
+          widget.controller!.text = '';
+        }
+      }
     }
   }
 
@@ -144,12 +193,19 @@ class _AnimatedTextFormFieldState extends State<AnimatedTextFormField> {
     sizeAnimation = Tween<double>(
       begin: 48.0,
       end: widget.width,
-    ).animate(CurvedAnimation(
-      parent: loadingController,
-      curve: _getInternalInterval(
-          .2, 1.0, interval.begin, interval.end, Curves.linearToEaseOut),
-      reverseCurve: Curves.easeInExpo,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: loadingController,
+        curve: _getInternalInterval(
+          .2,
+          1.0,
+          interval.begin,
+          interval.end,
+          Curves.linearToEaseOut,
+        ),
+        reverseCurve: Curves.easeInExpo,
+      ),
+    );
   }
 
   @override
@@ -167,7 +223,7 @@ class _AnimatedTextFormFieldState extends State<AnimatedTextFormField> {
     super.dispose();
   }
 
-  void handleAnimationStatus(status) {
+  void handleAnimationStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed) {
       widget.inertiaController?.reverse();
     }
@@ -195,36 +251,164 @@ class _AnimatedTextFormFieldState extends State<AnimatedTextFormField> {
     return InputDecoration(
       labelText: widget.labelText,
       prefixIcon: _buildInertiaAnimation(widget.prefixIcon),
-      suffixIcon: _buildInertiaAnimation(widget.loadingController != null
-          ? FadeTransition(
-              opacity: suffixIconOpacityAnimation,
-              child: widget.suffixIcon,
-            )
-          : widget.suffixIcon),
+      suffixIcon: _buildInertiaAnimation(
+        widget.loadingController != null
+            ? FadeTransition(
+                opacity: suffixIconOpacityAnimation,
+                child: widget.suffixIcon,
+              )
+            : widget.suffixIcon,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    Widget textField = TextFormField(
-      cursorColor: theme.primaryColor,
-      controller: widget.controller,
-      focusNode: widget.focusNode,
-      decoration: _getInputDecoration(theme),
-      keyboardType: widget.keyboardType,
-      textInputAction: widget.textInputAction,
-      obscureText: widget.obscureText,
-      onFieldSubmitted: widget.onFieldSubmitted,
-      onSaved: widget.onSaved,
-      validator: widget.validator,
-      enabled: widget.enabled,
-      autocorrect: widget.autocorrect,
-      autofillHints: widget.autofillHints,
-    );
+    Widget inputField;
+    if (widget.userType == LoginUserType.intlPhone) {
+      inputField = Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: InternationalPhoneNumberInput(
+          cursorColor: theme.primaryColor,
+          focusNode: widget.focusNode,
+          inputDecoration: _getInputDecoration(theme),
+          searchBoxDecoration: const InputDecoration(
+            contentPadding: EdgeInsets.only(left: 20),
+            labelText: 'Search by country name or dial code',
+          ),
+          keyboardType: widget.keyboardType ?? TextInputType.phone,
+          onFieldSubmitted: widget.onFieldSubmitted,
+          onSaved: (phoneNumber) {
+            if (phoneNumber.phoneNumber == phoneNumber.dialCode) {
+              widget.controller?.text = '';
+            } else {
+              widget.controller?.text = phoneNumber.phoneNumber ?? '';
+            }
+            _phoneNumberController.selection = TextSelection.collapsed(
+              offset: _phoneNumberController.text.length,
+            );
+            widget.onSaved?.call(phoneNumber.phoneNumber);
+          },
+          validator: widget.validator,
+          autofillHints: widget.autofillHints,
+          onInputChanged: (phoneNumber) {
+            if (phoneNumber.phoneNumber != null &&
+                phoneNumber.dialCode != null &&
+                phoneNumber.phoneNumber!.startsWith('+')) {
+              _phoneNumberController.text =
+                  _phoneNumberController.text.replaceAll(
+                RegExp(
+                  '^([\\+]${phoneNumber.dialCode!.replaceAll('+', '')}[\\s]?)',
+                ),
+                '',
+              );
+            }
+            _phoneNumberController.selection = TextSelection.collapsed(
+              offset: _phoneNumberController.text.length,
+            );
+          },
+          textFieldController: _phoneNumberController,
+          isEnabled: widget.enabled,
+          selectorConfig: SelectorConfig(
+            selectorType: PhoneInputSelectorType.DIALOG,
+            trailingSpace: false,
+            countryComparator: (c1, c2) =>
+                int.parse(c1.dialCode!.substring(1)).compareTo(
+              int.parse(c2.dialCode!.substring(1)),
+            ),
+          ),
+          spaceBetweenSelectorAndTextField: 0,
+          initialValue: _phoneNumberInitialValue,
+        ),
+      );
+    } else if (widget.userType == LoginUserType.checkbox) {
+      inputField = CheckboxFormField(
+        initialValue: widget.controller?.text == 'true',
+        validator: (value) =>
+            widget.validator?.call((value ?? false).toString()),
+        onChanged: (value) {
+          widget.onSaved?.call((value ?? false).toString());
+          widget.controller?.text = (value ?? false).toString();
+        },
+        title: widget.linkUrl != null
+            ? InkWell(
+                onTap: () {
+                  launchUrl(Uri.parse(widget.linkUrl!));
+                },
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        widget.labelText ?? '',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Icon(
+                        Icons.open_in_new,
+                        color: Theme.of(context).textTheme.bodyMedium!.color,
+                        size: Theme.of(context).textTheme.bodyMedium!.fontSize,
+                      ),
+                    )
+                  ],
+                ),
+              )
+            : Text(
+                widget.labelText ?? '',
+                style: Theme.of(context).textTheme.bodyMedium,
+                textAlign: TextAlign.left,
+              ),
+      );
+    } else {
+      inputField = TextFormField(
+        cursorColor: theme.primaryColor,
+        controller: widget.controller,
+        focusNode: widget.focusNode,
+        decoration: _getInputDecoration(theme),
+        keyboardType: widget.keyboardType,
+        textInputAction: widget.textInputAction,
+        obscureText: widget.obscureText,
+        onFieldSubmitted: widget.onFieldSubmitted,
+        onSaved: widget.onSaved,
+        validator: widget.validator,
+        enabled: widget.enabled,
+        autocorrect: widget.autocorrect,
+        autofillHints: widget.autofillHints,
+      );
+    }
+
+    if (widget.tooltip != null) {
+      final tooltipKey = GlobalKey<TooltipState>();
+      final tooltip = Tooltip(
+        key: tooltipKey,
+        richMessage: widget.tooltip,
+        showDuration: const Duration(seconds: 30),
+        triggerMode: TooltipTriggerMode.manual,
+        margin: const EdgeInsets.all(4),
+        child: inputField,
+      );
+      inputField = Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: tooltip,
+          ),
+          IconButton(
+            padding: EdgeInsets.zero,
+            onPressed: () => tooltipKey.currentState?.ensureTooltipVisible(),
+            color: theme.primaryColor,
+            iconSize: 28,
+            icon: const Icon(Icons.info),
+          )
+        ],
+      );
+    }
 
     if (widget.loadingController != null) {
-      textField = ScaleTransition(
+      inputField = ScaleTransition(
         scale: scaleAnimation,
         child: AnimatedBuilder(
           animation: sizeAnimation,
@@ -232,29 +416,29 @@ class _AnimatedTextFormFieldState extends State<AnimatedTextFormField> {
             constraints: BoxConstraints.tightFor(width: sizeAnimation.value),
             child: child,
           ),
-          child: textField,
+          child: inputField,
         ),
       );
     }
 
     if (widget.inertiaController != null) {
-      textField = AnimatedBuilder(
+      inputField = AnimatedBuilder(
         animation: fieldTranslateAnimation,
         builder: (context, child) => Transform.translate(
           offset: Offset(fieldTranslateAnimation.value, 0),
           child: child,
         ),
-        child: textField,
+        child: inputField,
       );
     }
 
-    return textField;
+    return inputField;
   }
 }
 
 class AnimatedPasswordTextFormField extends StatefulWidget {
   const AnimatedPasswordTextFormField({
-    Key? key,
+    super.key,
     this.interval = const Interval(0.0, 1.0),
     required this.animatedWidth,
     this.loadingController,
@@ -270,9 +454,10 @@ class AnimatedPasswordTextFormField extends StatefulWidget {
     this.onFieldSubmitted,
     this.onSaved,
     this.autofillHints,
-  })  : assert((inertiaController == null && inertiaDirection == null) ||
-            (inertiaController != null && inertiaDirection != null)),
-        super(key: key);
+  }) : assert(
+          (inertiaController == null && inertiaDirection == null) ||
+              (inertiaController != null && inertiaDirection != null),
+        );
 
   final Interval? interval;
   final AnimationController? loadingController;
@@ -291,7 +476,7 @@ class AnimatedPasswordTextFormField extends StatefulWidget {
   final Iterable<String>? autofillHints;
 
   @override
-  _AnimatedPasswordTextFormFieldState createState() =>
+  State<AnimatedPasswordTextFormField> createState() =>
       _AnimatedPasswordTextFormFieldState();
 }
 
