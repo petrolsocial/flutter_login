@@ -67,7 +67,7 @@ class LoginScreen extends StatelessWidget {
       loginAfterSignUp: false,
       enableAnonAuth: true,
       loginProviders: [
-        LoginProvider(
+        /*LoginProvider(
           button: Buttons.linkedIn,
           label: 'Sign in with LinkedIn',
           callback: () async {
@@ -77,7 +77,7 @@ class LoginScreen extends StatelessWidget {
             // put here your logic to conditionally show the additional fields
             return Future.value(true);
           },
-        ),
+        ),*/
         LoginProvider(
           icon: FontAwesomeIcons.google,
           label: 'Google',

@@ -22,21 +22,19 @@ import 'package:flutter_login/src/widgets/hero_text.dart';
 import 'package:flutter_login/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:sign_in_button/sign_in_button.dart';
-
-export 'package:sign_in_button/src/button_list.dart';
+//export 'package:sign_in_button/src/button_list.dart';
 
 export 'src/models/login_data.dart';
 export 'src/models/login_user_type.dart';
-export 'src/models/signup_data.dart';
 export 'src/models/phone_login_data.dart';
+export 'src/models/signup_data.dart';
 export 'src/models/term_of_service.dart';
 export 'src/models/user_form_field.dart';
 export 'src/providers/auth.dart';
 export 'src/providers/login_messages.dart';
 export 'src/providers/login_theme.dart';
-export 'src/providers/auth.dart';
-export 'src/widgets/animated_text_form_field.dart';
 export 'src/widgets/animated_button.dart';
+export 'src/widgets/animated_text_form_field.dart';
 
 class LoginProvider {
   /// Used for custom sign-in buttons.
@@ -319,14 +317,14 @@ class FlutterLogin extends StatefulWidget {
       this.onSwitchToAdditionalFields,
       dynamic backgroundImage,
       this.phoneLoginOtpSentNotifier,
-      this.phoneLoginVerificationStatusNotifier})
+      this.phoneLoginVerificationStatusNotifier, this.validateUserImmediately,})
       : assert((logo is String?) || (logo is ImageProvider?)),
         logo = logo is String ? AssetImage(logo) : logo as ImageProvider?,
         assert((backgroundImage is String?) ||
             (backgroundImage is ImageProvider?)),
         backgroundImage = backgroundImage is String
             ? AssetImage(backgroundImage)
-            : backgroundImage;
+            : backgroundImage as ImageProvider;
 
   /// Called when the user hit the submit button when in sign up mode
   ///

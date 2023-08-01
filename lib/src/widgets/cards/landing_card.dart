@@ -103,7 +103,7 @@ class _LandingCardState extends State<LandingCard>
           child: ScaleTransition(
             scale: _buttonScaleAnimation,
             child: SignInButton(
-              loginProvider.button!,
+              loginProvider.button! as Buttons,
               onPressed: () => _loginProviderSubmit(
                 loginProvider: loginProvider,
               ),
@@ -263,7 +263,7 @@ class _LandingCardState extends State<LandingCard>
                         child: ScaleTransition(
                           scale: _buttonScaleAnimation,
                           child: SignInButton(
-                            Buttons.Email,
+                            Buttons.email as Buttons,
                             onPressed: () => widget.onSignInWithEmail?.call(),
                           ),
                           // child: loginProvider.button,

@@ -25,8 +25,8 @@ final mockCallback = MockCallback();
 List<LoginData> loginStubCallback(MockCallback mockCallback) {
   reset(mockCallback);
 
-  final user = LoginData(name: 'near@gmail.com', password: '12345');
-  final invalidUser = LoginData(name: 'not.exists@gmail.com', password: '');
+  final user = LoginData(name: 'near@gmail.com', password: '12345', isAnonymous: false);
+  final invalidUser = LoginData(name: 'not.exists@gmail.com', password: '', isAnonymous: false);
 
   when(mockCallback.userValidator(user.name)).thenReturn(null);
   when(mockCallback.userValidator('invalid-name')).thenReturn('Invalid!');
@@ -45,9 +45,9 @@ List<SignupData> signupStubCallback(MockCallback mockCallback) {
   reset(mockCallback);
 
   final user =
-      SignupData.fromSignupForm(name: 'near@gmail.com', password: '12345');
+      SignupData.fromSignupForm(name: 'near@gmail.com', password: '12345', isAnonymous: false);
   final invalidUser =
-      SignupData.fromSignupForm(name: 'not.exists@gmail.com', password: '');
+      SignupData.fromSignupForm(name: 'not.exists@gmail.com', password: '', isAnonymous: false);
 
   when(mockCallback.userValidator(user.name)).thenReturn(null);
   when(mockCallback.userValidator('invalid-name')).thenReturn('Invalid!');
