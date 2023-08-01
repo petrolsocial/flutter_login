@@ -83,7 +83,7 @@ class LoginProvider {
     this.label = '',
     this.providerNeedsSignUpCallback,
     this.phoneLogin,
-    // this.animated = true
+    this.animated = true
   }) : assert(button != null || icon != null);
 }
 

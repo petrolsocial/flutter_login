@@ -163,7 +163,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     }
   }
 
-  Future<bool> _submit() async {
+  Future<bool> _submit(bool isAnonymous) async {
     FocusScope.of(context).unfocus(); //removed unfocus hack, test
 
     final messages = Provider.of<LoginMessages>(context, listen: false);
@@ -184,11 +184,12 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       auth.mode = AuthMode.signup;
     }
 
-    if (auth.isLogin) {
+    if (!isAnonymous && auth.isLogin) {
       error = await auth.onLogin?.call(
         LoginData(
           name: auth.email,
           password: auth.password,
+          isAnonymous: isAnonymous,
         ),
       );
     } else {
@@ -324,6 +325,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
           SignupData.fromSignupForm(
             name: auth.email,
             password: auth.password,
+            isAnonymous: false,
             termsOfService: auth.getTermsOfServiceResults(),
             additionalSignupData: auth.additionalSignupData,
           ),
@@ -793,6 +795,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
                 _buildPasswordField(textFieldWidth, messages, auth),
                 const SizedBox(height: 10),
               ],
+            ),
             // child: AutofillGroup(  //From merge, test
             //   child: Column(
             //     crossAxisAlignment: CrossAxisAlignment.start,
