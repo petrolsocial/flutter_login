@@ -15,8 +15,8 @@ import 'package:flutter_login/src/paddings.dart';
 import 'package:flutter_login/src/utils/text_field_utils.dart';
 import 'package:flutter_login/src/widget_helper.dart';
 import 'package:flutter_login/src/widgets/cards/pin_input_field.dart';
-import 'package:flutter_signin_button/button_list.dart';
-import 'package:flutter_signin_button/button_view.dart';
+//import 'package:flutter_signin_button/button_list.dart';
+//import 'package:flutter_signin_button/button_view.dart';
 import 'package:flutter_login/src/widgets/animated_button.dart';
 import 'package:flutter_login/src/widgets/animated_icon.dart';
 import 'package:flutter_login/src/widgets/animated_text.dart';
@@ -60,6 +60,7 @@ class AuthCard extends StatefulWidget {
     this.passwordValidator,
     this.onSubmit,
     this.onSubmitCompleted,
+    this.onAutoVerifiedPhone,
     this.hideForgotPasswordButton = false,
     this.hideSignUpButton = false,
     this.enableAnonAuth = false,
@@ -370,6 +371,7 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
             LoginData(
               name: auth.email,
               password: auth.password,
+              isAnonymous: false,
             ),
           ) ??
           true;
@@ -392,7 +394,7 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
             key: _emailCardKey,
             loadingController: formController,
             userValidator: widget.userValidator,
-            validateUserImmediately: widget.validateUserImmediately,
+            //validateUserImmediately: widget.validateUserImmediately,
             passwordValidator: widget.passwordValidator,
             onSwitchRecoveryPassword: () => _changeCard(_recoveryIndex),
             onSwitchSignUpAdditionalData: () =>
@@ -408,13 +410,11 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
                 widget.onSubmitCompleted!();
               });
             },
-            requireSignUpConfirmation: requireSignUpConfirmation,
-            onSwitchConfirmSignup: () => _changeCard(_confirmSignup),
             hideSignUpButton: widget.hideSignUpButton,
             hideForgotPasswordButton: widget.hideForgotPasswordButton,
             loginAfterSignUp: widget.loginAfterSignUp,
             hideProvidersTitle: widget.hideProvidersTitle,
-            introWidget: widget.introWidget,
+            //introWidget: widget.introWidget,
 //          ),
         );
       case _recoveryIndex:
@@ -424,12 +424,12 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
           loginTheme: widget.loginTheme,
           loadingController: formController,
           navigateBack: widget.navigateBackAfterRecovery,
-          onBack: () => _changeCard(_loginPageIndex),
+          onBack: () => _changeCard(_emailPageIndex),
           onSubmitCompleted: () {
             if (auth.onConfirmRecover != null) {
               _changeCard(_confirmRecover);
             } else {
-              _changeCard(_loginPageIndex);
+              _changeCard(_emailPageIndex);
             }
           },
         );

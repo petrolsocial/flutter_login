@@ -60,6 +60,7 @@ class Auth with ChangeNotifier {
       this.onRecoverPassword,
       this.onConfirmRecover,
       this.onConfirmSignup,
+      this.confirmSignupRequired,
       this.onResendCode,
       this.beforeAdditionalFieldsCallback,
       String email = '',
